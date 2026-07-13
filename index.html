@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Training Attendance Scanner</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f4f6f9; margin: 0; padding: 20px; }
+    .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    h2 { color: #1a73e8; margin-top: 0; }
+    #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
+    #result-box { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: bold; font-size: 1.1em; display: none; }
+    .success { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
+    .loading { background: #fef7e0; color: #b06000; border: 1px solid #feefc3; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Training Attendance Scanner</h2>
+  <p>Place the participant's QR code in front of the webcam</p>
+  <div id="reader"></div>
+  <div id="result-box"></div>
+</div>
+
+<script>
+  // REPLACE THE LINK BELOW WITH YOUR COPIED GOOGLE WEB APP URL
+  const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyNnVX4bkA0WdKvMXLMqmWln27U9TRRK6muW7Yu5m0q4GhEb8hPwBCYu4tiWs3s6J81CA/exec";
+
+  let lastScannedCode = "";
+  let isProcessing = false;
+
+  function onScanSuccess(decodedText) {
+    if (isProcessing || decodedText === lastScannedCode) return;
+    
+    isProcessing = true;
+    lastScannedCode = decodedText;
+    
+    const resultBox = document.getElementById("result-box");
+    resultBox.className = "loading";
+    resultBox.style.display = "block";
+    resultBox.innerText = "Processing scan... Please hold.";
+
+    let scannedId = decodedText;
+    if (decodedText.includes("id=")) {
+      scannedId = decodedText.split("id=")[1];
+    }
+
+    // Securely pass the data to Google Sheets via POST request
+    fetch(googleWebAppUrl, {
+      method: "POST",
+      body: JSON.stringify({ id: scannedId }),
+      headers: { "Content-Type": "text/plain" }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "success") {
+        resultBox.className = "success";
+        resultBox.innerText = data.message;
+      } else {
+        resultBox.className = "loading";
+        resultBox.style.background = "#fce8e6";
+        resultBox.style.color = "#c5221f";
+        resultBox.innerText = "Error: " + data.message;
+      }
+      
+      setTimeout(() => {
+        isProcessing = false;
+        lastScannedCode = "";
+        resultBox.style.display = "none";
+      }, 3000);
+    })
+    .catch(err => {
+      console.error(err);
+      isProcessing = false;
+      lastScannedCode = "";
+    });
+  }
+
+  const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+    fps: 10, 
+    qrbox: { width: 250, height: 250 } 
+  });
+  html5QrcodeScanner.render(onScanSuccess);
+</script>
+
+</body>
+</html>
