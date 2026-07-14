@@ -9,6 +9,13 @@
     .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     h2 { color: #1a73e8; margin-top: 0; }
     #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
+    
+    /* 🛠️ FIX MIRROR EFFECT: This forces the library's hidden video player to un-mirror! */
+    #reader video {
+      transform: scaleX(1) !important;
+      -webkit-transform: scaleX(1) !important;
+    }
+
     #result-box { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: bold; font-size: 1.1em; display: none; }
     .success { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
     .loading { background: #fef7e0; color: #b06000; border: 1px solid #feefc3; }
@@ -28,6 +35,8 @@
   <div id="result-box"></div>
 </div>
 
+<audio id="scan-sound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+
 <script>
   // REPLACE THE LINK BELOW WITH YOUR COPIED GOOGLE WEB APP URL
   const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyNnVX4bkA0WdKvMXLMqmWln27U9TRRK6muW7Yu5m0q4GhEb8hPwBCYu4tiWs3s6J81CA/exec";
@@ -40,6 +49,13 @@
     
     isProcessing = true;
     lastScannedCode = decodedText;
+    
+    // 🔔 PLAY AUDIO: Sounds off instantly on a successful code scan
+    try {
+      document.getElementById('scan-sound').play();
+    } catch(err) {
+      console.log("Audio playback blocked by browser settings until user clicks the page.");
+    }
     
     const resultBox = document.getElementById("result-box");
     resultBox.className = "loading";
