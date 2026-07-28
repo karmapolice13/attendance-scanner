@@ -10,7 +10,6 @@
     h2 { color: #1a73e8; margin-top: 0; }
     #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
     
-    /* 🛠️ FIX MIRROR EFFECT: This forces the library's hidden video player to un-mirror! */
     #reader video {
       transform: rotateY(180deg) !important;
       -webkit-transform: rotateY(180deg) !important;
@@ -39,7 +38,7 @@
 
 <script>
   // REPLACE THE LINK BELOW WITH YOUR COPIED GOOGLE WEB APP URL
-  const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyNnVX4bkA0WdKvMXLMqmWln27U9TRRK6muW7Yu5m0q4GhEb8hPwBCYu4tiWs3s6J81CA/exec";
+  const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
 
   let lastScannedCode = "";
   let isProcessing = false;
@@ -49,11 +48,10 @@
     
     isProcessing = true;
     lastScannedCode = decodedText;
-    
-    // 🔔 PLAY AUDIO: Forces your local sound file to rewind and play instantly
+
     try {
       const sound = document.getElementById('scan-sound');
-      sound.currentTime = 0; // Rewinds the sound to the absolute start
+      sound.currentTime = 0;
       sound.play();
     } catch(err) {
       console.log("Audio playback blocked by browser settings until user clicks the page.");
@@ -102,7 +100,8 @@
 
   const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
     fps: 10, 
-    qrbox: { width: 250, height: 250 } 
+    qrbox: { width: 250, height: 250 },
+    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
   });
   html5QrcodeScanner.render(onScanSuccess);
 </script>
