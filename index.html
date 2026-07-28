@@ -37,8 +37,10 @@
 <audio id="scan-sound" src="barcode sound effect.mp3" preload="auto"></audio>
 
 <script>
-  // REPLACE THE LINK BELOW WITH YOUR COPIED GOOGLE WEB APP URL
-  const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
+  const urlParams = new URLSearchParams(window.location.search);
+  const customScriptUrl = urlParams.get('scriptUrl');
+  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyNnVX4bkA0WdKvMXLMqmWln27U9TRRK6muW7Yu5m0q4GhEb8hPwBCYu4tiWs3s6J81CA/exec";
+  const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   let lastScannedCode = "";
   let isProcessing = false;
@@ -51,15 +53,19 @@
     
     try {
       const sound = document.getElementById('scan-sound');
-      sound.currentTime = 0;
-      sound.play();
+      if (sound) {
+        sound.currentTime = 0;
+        sound.play();
+      }
     } catch(err) {
-      console.log("Audio playback blocked by browser settings until user clicks the page.");
+      console.log("Audio playback blocked by browser settings until user interacts with page.");
     }
     
     const resultBox = document.getElementById("result-box");
     resultBox.className = "loading";
     resultBox.style.display = "block";
+    resultBox.style.background = "#fef7e0";
+    resultBox.style.color = "#b06000";
     resultBox.innerText = "Processing scan... Please hold.";
 
     let scannedId = decodedText;
@@ -80,6 +86,8 @@
     .then(data => {
       if (data.status === "success") {
         resultBox.className = "success";
+        resultBox.style.background = "#e6f4ea";
+        resultBox.style.color = "#137333";
         resultBox.innerText = data.message;
       } else {
         resultBox.className = "loading";
@@ -96,8 +104,16 @@
     })
     .catch(err => {
       console.error(err);
-      isProcessing = false;
-      lastScannedCode = "";
+      resultBox.className = "loading";
+      resultBox.style.background = "#fce8e6";
+      resultBox.style.color = "#c5221f";
+      resultBox.innerText = "Network Error: Could not reach Google Sheet.";
+      
+      setTimeout(() => {
+        isProcessing = false;
+        lastScannedCode = "";
+        resultBox.style.display = "none";
+      }, 3000);
     });
   }
 
