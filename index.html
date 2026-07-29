@@ -21,7 +21,6 @@
   </style>
 </head>
 <body>
-<h1 id="seminar-title">Loading Seminar Title...</h1>
 <div style="text-align: center; margin-top: 20px; margin-bottom: 15px;">
     <img src="Commission_on_Audit.svg.webp" 
          alt="COA Logo" 
@@ -41,7 +40,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
 
-  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyNnVX4bkA0WdKvMXLMqmWln27U9TRRK6muW7Yu5m0q4GhEb8hPwBCYu4tiWs3s6J81CA/exec";
+  const defaultWebAppUrl = "YOUR_APPS_SCRIPT_EXEC_URL_HERE";
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -49,12 +48,12 @@
       .then(response => response.json())
       .then(data => {
         if (data.title) {
-          document.getElementById("seminar-title").innerText = data.title;
+          document.title = data.title;
         }
       })
       .catch(err => {
         console.error("Could not fetch sheet title:", err);
-        document.getElementById("seminar-title").innerText = "Seminar Attendance Scanner";
+        document.title = "Seminar Attendance Scanner";
       });
   });
 
