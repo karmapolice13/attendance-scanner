@@ -82,7 +82,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
 
-  const defaultWebAppUrl = https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec;
+  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   window.addEventListener('DOMContentLoaded', () => {
