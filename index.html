@@ -13,16 +13,17 @@
       padding: 20px; 
     }
 
-    /* Container styling with background logo watermark */
+    /* 📐 EXPANDED CONTAINER BOX */
     .container { 
-      position: relative;                  /* Required to position the background watermark */
-      max-width: 500px; 
-      margin: 0 auto; 
+      position: relative;
+      max-width: 650px;                   /* Increased width from 500px to 650px */
+      margin: 20px auto; 
       background: white; 
-      padding: 25px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-      overflow: hidden;                    /* Keeps the background image contained */
+      padding: 40px 30px;                 /* Increased top/bottom padding to make box taller */
+      border-radius: 16px; 
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
+      overflow: hidden;
+      min-height: 520px;                  /* Ensures a generous height for the background logo */
     }
 
     /* 🏛️ COA LOGO BACKGROUND WATERMARK */
@@ -32,15 +33,15 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 85%;                          /* Controls watermark size */
-      height: 85%;
+      width: 90%;                          /* Larger watermark coverage */
+      height: 90%;
       background-image: url('Commission_on_Audit.svg.webp');
       background-repeat: no-repeat;
       background-position: center;
       background-size: contain;
-      opacity: 0.12;                       /* Subtle 12% opacity watermark */
-      pointer-events: none;                /* Ensures clicks pass through to camera controls */
-      z-index: 0;                          /* Sits behind text, camera, and result box */
+      opacity: 0.20;                       /* Slightly boosted opacity for better visibility */
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* Keep all visible elements layered above the watermark */
@@ -52,7 +53,7 @@
       z-index: 1;
     }
 
-    h2 { color: #1a73e8; margin-top: 0; }
+    h2 { color: #1a73e8; margin-top: 0; font-size: 1.6em; }
     
     #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
     
@@ -81,7 +82,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
 
-  const defaultWebAppUrl = "YOUR_APPS_SCRIPT_EXEC_URL_HERE";
+  const defaultWebAppUrl = https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec;
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   window.addEventListener('DOMContentLoaded', () => {
