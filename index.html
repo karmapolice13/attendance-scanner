@@ -5,9 +5,55 @@
   <title>Training Attendance Scanner</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f4f6f9; margin: 0; padding: 20px; }
-    .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    body { 
+      font-family: 'Segoe UI', Arial, sans-serif; 
+      text-align: center; 
+      background: #f4f6f9; 
+      margin: 0; 
+      padding: 20px; 
+    }
+
+    /* Container styling with background logo watermark */
+    .container { 
+      position: relative;                  /* Required to position the background watermark */
+      max-width: 500px; 
+      margin: 0 auto; 
+      background: white; 
+      padding: 25px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+      overflow: hidden;                    /* Keeps the background image contained */
+    }
+
+    /* 🏛️ COA LOGO BACKGROUND WATERMARK */
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 85%;                          /* Controls watermark size */
+      height: 85%;
+      background-image: url('Commission_on_Audit.svg.webp');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.12;                       /* Subtle 12% opacity watermark */
+      pointer-events: none;                /* Ensures clicks pass through to camera controls */
+      z-index: 0;                          /* Sits behind text, camera, and result box */
+    }
+
+    /* Keep all visible elements layered above the watermark */
+    .container h2,
+    .container p,
+    #reader,
+    #result-box {
+      position: relative;
+      z-index: 1;
+    }
+
     h2 { color: #1a73e8; margin-top: 0; }
+    
     #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
     
     #reader video {
@@ -21,11 +67,6 @@
   </style>
 </head>
 <body>
-<div style="text-align: center; margin-top: 20px; margin-bottom: 15px;">
-    <img src="Commission_on_Audit.svg.webp" 
-         alt="COA Logo" 
-         style="width: 120px; height: auto; max-width: 100%;">
-</div>
   
 <div class="container">
   <h2>Training Attendance Scanner</h2>
