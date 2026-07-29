@@ -13,38 +13,37 @@
       padding: 20px; 
     }
 
-    
+    /* 📐 WIDER 600px CONTAINER */
     .container { 
       position: relative;
-      max-width: 650px;                   
-      margin: 20px auto; 
+      max-width: 600px;                   /* Expanded container width */
+      margin: 0 auto; 
       background: white; 
-      padding: 40px 30px;                
-      border-radius: 16px; 
-      box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
+      padding: 30px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
       overflow: hidden;
-      min-height: 520px;                  
     }
 
-   
+    /* 🏛️ COA LOGO BACKGROUND WATERMARK */
     .container::before {
       content: "";
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 90%;                         
-      height: 90%;
+      width: 85%;                          
+      height: 85%;
       background-image: url('Commission_on_Audit.svg.webp');
       background-repeat: no-repeat;
       background-position: center;
       background-size: contain;
-      opacity: 0.20;                      
+      opacity: 0.15;                       
       pointer-events: none;
       z-index: 0;
     }
 
-    
+    /* Keep all visible elements layered above the watermark */
     .container h2,
     .container p,
     #reader,
@@ -53,16 +52,34 @@
       z-index: 1;
     }
 
-    h2 { color: #1a73e8; margin-top: 0; font-size: 1.6em; }
+    h2 { color: #1a73e8; margin-top: 0; }
     
-    #reader { width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
+    /* 📷 CAMERA SCREEN RESTORED TO COMPACT ORIGINAL SIZE */
+    #reader { 
+      width: 100%; 
+      max-width: 400px;                   /* Prevents video screen from stretching too large */
+      margin: 0 auto;                     /* Centers camera viewport in the 600px card */
+      background: #000; 
+      border-radius: 8px; 
+      overflow: hidden; 
+    }
     
     #reader video {
       transform: rotateY(180deg) !important;
       -webkit-transform: rotateY(180deg) !important;
     }
 
-    #result-box { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: bold; font-size: 1.1em; display: none; }
+    #result-box { 
+      margin-top: 20px; 
+      padding: 15px; 
+      border-radius: 6px; 
+      font-weight: bold; 
+      font-size: 1.1em; 
+      display: none; 
+      max-width: 450px;
+      margin-left: auto;
+      margin-right: auto;
+    }
     .success { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
     .loading { background: #fef7e0; color: #b06000; border: 1px solid #feefc3; }
   </style>
@@ -82,7 +99,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
 
-  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
+  const defaultWebAppUrl = "YOUR_APPS_SCRIPT_EXEC_URL_HERE";
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   window.addEventListener('DOMContentLoaded', () => {
