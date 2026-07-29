@@ -13,38 +13,38 @@
       padding: 20px; 
     }
 
-    /* 📐 EXPANDED CONTAINER BOX */
+    
     .container { 
       position: relative;
-      max-width: 650px;                   /* Increased width from 500px to 650px */
+      max-width: 650px;                   
       margin: 20px auto; 
       background: white; 
-      padding: 40px 30px;                 /* Increased top/bottom padding to make box taller */
+      padding: 40px 30px;                
       border-radius: 16px; 
       box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
       overflow: hidden;
-      min-height: 520px;                  /* Ensures a generous height for the background logo */
+      min-height: 520px;                  
     }
 
-    /* 🏛️ COA LOGO BACKGROUND WATERMARK */
+   
     .container::before {
       content: "";
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 90%;                          /* Larger watermark coverage */
+      width: 90%;                         
       height: 90%;
       background-image: url('Commission_on_Audit.svg.webp');
       background-repeat: no-repeat;
       background-position: center;
       background-size: contain;
-      opacity: 0.20;                       /* Slightly boosted opacity for better visibility */
+      opacity: 0.20;                      
       pointer-events: none;
       z-index: 0;
     }
 
-    /* Keep all visible elements layered above the watermark */
+    
     .container h2,
     .container p,
     #reader,
