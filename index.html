@@ -16,7 +16,7 @@
     /* 📐 WIDER 600px CONTAINER */
     .container { 
       position: relative;
-      max-width: 600px;                   /* Expanded container width */
+      max-width: 600px;                   
       margin: 0 auto; 
       background: white; 
       padding: 30px; 
@@ -25,15 +25,15 @@
       overflow: hidden;
     }
 
-    /* 🏛️ COA LOGO BACKGROUND WATERMARK */
+    
     .container::before {
       content: "";
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 85%;                          
-      height: 85%;
+      width: 100%;                          
+      height: 100%;
       background-image: url('Commission_on_Audit.svg.webp');
       background-repeat: no-repeat;
       background-position: center;
@@ -57,8 +57,8 @@
     /* 📷 CAMERA SCREEN RESTORED TO COMPACT ORIGINAL SIZE */
     #reader { 
       width: 100%; 
-      max-width: 400px;                   /* Prevents video screen from stretching too large */
-      margin: 0 auto;                     /* Centers camera viewport in the 600px card */
+      max-width: 400px;                   
+      margin: 0 auto;                     
       background: #000; 
       border-radius: 8px; 
       overflow: hidden; 
@@ -99,7 +99,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
 
-  const defaultWebAppUrl = "YOUR_APPS_SCRIPT_EXEC_URL_HERE";
+  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   window.addEventListener('DOMContentLoaded', () => {
