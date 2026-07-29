@@ -85,10 +85,10 @@
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   window.addEventListener('DOMContentLoaded', () => {
-    fetch(googleWebAppUrl)
+    fetch(googleWebAppUrl, { redirect: "follow" })
       .then(response => response.json())
       .then(data => {
-        if (data.title) {
+        if (data.title && data.title !== "") {
           document.title = data.title;
         }
       })
