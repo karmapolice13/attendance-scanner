@@ -1,0 +1,52 @@
+/* Custom styles for the COA Logo Watermark and Camera Box */
+.scanner-card {
+  position: relative;
+  overflow: hidden;
+  max-width: 650px; /* Upper limit on wide screens */
+}
+
+/* 🏛️ COA LOGO BACKGROUND WATERMARK */
+.scanner-card::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  /* Notice the ../ to correctly navigate out of the css/ folder */
+  background-image: url('../assets/logos/commissiononaudit_logo.webp');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Keep card elements layered above the watermark */
+.scanner-card .card-body {
+  position: relative;
+  z-index: 1;
+}
+
+/* 📷 CAMERA VIEWPORT */
+#reader {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#reader video {
+  transform: rotateY(180deg) !important;
+  -webkit-transform: rotateY(180deg) !important;
+}
+
+/* RESULT ALERT BOX (Extracted from inline HTML style attribute) */
+#result-box {
+  display: none;
+  max-width: 420px;
+}
