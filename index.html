@@ -1,95 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Training Attendance Scanner</title>
+
+  <!-- 1. BOOTSTRAP 5 CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- 2. HTML5-QRCode Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
   <style>
-    body { 
-      font-family: 'Segoe UI', Arial, sans-serif; 
-      text-align: center; 
-      background: #f4f6f9; 
-      margin: 0; 
-      padding: 20px; 
-    }
-
-    /* 📐 WIDER 600px CONTAINER */
-    .container { 
+    /* Custom styles for the COA Logo Watermark and Camera Box */
+    .scanner-card {
       position: relative;
-      max-width: 600px;                   
-      margin: 0 auto; 
-      background: white; 
-      padding: 30px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
       overflow: hidden;
+      max-width: 650px; /* Upper limit on wide screens */
     }
 
-    .container::before {
+    /* 🏛️ COA LOGO BACKGROUND WATERMARK */
+    .scanner-card::before {
       content: "";
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 300px;                          
-      height: 300px;
+      width: 80%;
+      height: 80%;
       background-image: url('Commission_on_Audit.svg.webp');
       background-repeat: no-repeat;
       background-position: center;
       background-size: contain;
-      opacity: 0.15;                       
+      opacity: 0.15;
       pointer-events: none;
       z-index: 0;
     }
 
-    /* Keep all visible elements layered above the watermark */
-    .container h2,
-    .container p,
-    #reader,
-    #result-box {
+    /* Keep card elements layered above the watermark */
+    .scanner-card .card-body {
       position: relative;
       z-index: 1;
     }
 
-    h2 { color: #1a73e8; margin-top: 0; }
-    
-    /* 📷 CAMERA SCREEN RESTORED TO COMPACT ORIGINAL SIZE */
-    #reader { 
-      width: 100%; 
-      max-width: 500px;                   
-      margin: 0 auto;                     
-      background: #000; 
-      border-radius: 8px; 
-      overflow: hidden; 
+    /* 📷 CAMERA VIEWPORT */
+    #reader {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
     }
-    
+
     #reader video {
       transform: rotateY(180deg) !important;
       -webkit-transform: rotateY(180deg) !important;
     }
-
-    #result-box { 
-      margin-top: 20px; 
-      padding: 15px; 
-      border-radius: 6px; 
-      font-weight: bold; 
-      font-size: 1.1em; 
-      display: none; 
-      max-width: 450px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .success { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
-    .loading { background: #fef7e0; color: #b06000; border: 1px solid #feefc3; }
   </style>
 </head>
-<body>
-  
-<div class="container">
-  <h2>Training Attendance Scanner</h2>
-  <p>Place the participant's QR code in front of the webcam</p>
-  <div id="reader"></div>
-  <div id="result-box"></div>
+<body class="bg-light min-vh-100 d-flex flex-column justify-content-center align-items-center py-4">
+
+<!-- Main Bootstrap Container -->
+<div class="container d-flex justify-content-center">
+  <div class="card scanner-card shadow-sm border-0 w-100 p-3 p-md-4">
+    <div class="card-body text-center">
+      
+      <!-- Title & Subtitle -->
+      <h2 class="text-primary fw-bold mb-2">Training Attendance Scanner</h2>
+      <p class="text-muted lead mb-4 fs-6">Place the participant's QR code in front of the webcam</p>
+
+      <!-- Camera Scanner Viewport -->
+      <div id="reader" class="shadow-sm mb-3"></div>
+
+      <!-- Result Alert Box -->
+      <div id="result-box" class="alert fw-bold text-center mx-auto" style="display: none; max-width: 420px;" role="alert"></div>
+
+    </div>
+  </div>
 </div>
 
 <audio id="scan-sound" src="barcode sound effect.mp3" preload="auto"></audio>
@@ -98,7 +86,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
 
-  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
+  const defaultWebAppUrl = "YOUR_APPS_SCRIPT_EXEC_URL_HERE";
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -135,10 +123,10 @@
     }
     
     const resultBox = document.getElementById("result-box");
-    resultBox.className = "loading";
+    
+    // Bootstrap warning alert while processing
+    resultBox.className = "alert alert-warning fw-bold text-center mx-auto my-3";
     resultBox.style.display = "block";
-    resultBox.style.background = "#fef7e0";
-    resultBox.style.color = "#b06000";
     resultBox.innerText = "Processing scan... Please hold.";
 
     let scannedId = decodedText;
@@ -158,14 +146,12 @@
     .then(response => response.json())
     .then(data => {
       if (data.status === "success") {
-        resultBox.className = "success";
-        resultBox.style.background = "#e6f4ea";
-        resultBox.style.color = "#137333";
+        // Bootstrap success alert
+        resultBox.className = "alert alert-success fw-bold text-center mx-auto my-3";
         resultBox.innerText = data.message;
       } else {
-        resultBox.className = "loading";
-        resultBox.style.background = "#fce8e6";
-        resultBox.style.color = "#c5221f";
+        // Bootstrap danger/error alert
+        resultBox.className = "alert alert-danger fw-bold text-center mx-auto my-3";
         resultBox.innerText = "Error: " + data.message;
       }
       
@@ -177,9 +163,7 @@
     })
     .catch(err => {
       console.error(err);
-      resultBox.className = "loading";
-      resultBox.style.background = "#fce8e6";
-      resultBox.style.color = "#c5221f";
+      resultBox.className = "alert alert-danger fw-bold text-center mx-auto my-3";
       resultBox.innerText = "Network Error: Could not reach Google Sheet.";
       
       setTimeout(() => {
