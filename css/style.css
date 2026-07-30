@@ -5,7 +5,12 @@
   background-size: cover;
   background-position: center;
 }
-
+/* Header Banner Logo */
+.header-logo {
+  max-width: 450px;
+  width: 100%;      
+  height: auto;     
+}
 /* Auth Card Adjustments */
 .auth-card .card {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -19,23 +24,6 @@
   max-width: 650px;
 }
 
-/* COA LOGO BACKGROUND WATERMARK */
-.scanner-card::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 80%;
-  background-image: url('../assets/logos/commissiononaudit_logo.webp');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0.12;
-  pointer-events: none;
-  z-index: 0;
-}
 
 /* Keep content visible above logo */
 .scanner-card .card-body {
@@ -46,7 +34,7 @@
 /* 📷 CAMERA VIEWPORT */
 #reader {
   width: 100%;
-  max-width: 420px;
+  max-width: 500px;
   margin: 0 auto;
   background: #000;
   border-radius: 8px;
