@@ -1,22 +1,11 @@
-body {
-  /* Option A: Solid background color or subtle gradient */
-  background-color: #f4f6f9;
-
-  /* Option B: Background image with cover sizing */
-  background-image: url('../assets/images/coafacade.png');
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
-  
-  /* Ensures background covers full height even if content is short */
-  min-height: 100vh;
-}
+/* Custom Card Container */
 .scanner-card {
   position: relative;
   overflow: hidden;
-  max-width: 650px; /* Upper limit on wide screens */
+  max-width: 650px;
 }
 
+/* 🏛️ COA LOGO BACKGROUND WATERMARK */
 .scanner-card::before {
   content: "";
   position: absolute;
@@ -25,17 +14,16 @@ body {
   transform: translate(-50%, -50%);
   width: 80%;
   height: 80%;
-  /* Notice the ../ to correctly navigate out of the css/ folder */
-  background-image: url('../assets/logos/commissiononaudit_logo.webp');
+  background-image: url('../Commission_on_Audit.svg.webp');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  opacity: 0.15;
+  opacity: 0.12;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Keep card elements layered above the watermark */
+/* Keep content visible above logo */
 .scanner-card .card-body {
   position: relative;
   z-index: 1;
@@ -56,7 +44,7 @@ body {
   -webkit-transform: rotateY(180deg) !important;
 }
 
-/* RESULT ALERT BOX (Extracted from inline HTML style attribute) */
+/* Result Box Initial Sizing */
 #result-box {
   display: none;
   max-width: 420px;
