@@ -15,19 +15,22 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body class="custom-bg min-vh-100 d-flex flex-column justify-content-center align-items-center py-4">
-
+  
 <div class="container d-flex justify-content-center">
   <div class="card scanner-card shadow-sm border-0 w-100 p-3 p-md-4">
     <div class="card-body text-center">
       
-      <!-- Banner Logo Header -->
-<div class="mb-4 text-center">
+<!-- Banner Logo Header -->
+<div class="mb-3 text-center">
   <img 
     src="assets/logos/darklogo.png" 
     alt="Seminar Attendance Scanner Header" 
     class="img-fluid header-logo"
   >
 </div>
+
+<!-- Instruction Subtitle -->
+<p class="text-muted lead mb-4 fs-6">Place the participant's QR code in front of the webcam</p>
 
       <!-- Camera Viewport -->
       <div id="reader" class="shadow-sm mb-3"></div>
@@ -40,6 +43,7 @@
 </div>
 
 <audio id="scan-sound" src="assets/sounds/barcode_sound_effect_1.mp3" preload="auto"></audio>
+<audio id="error-sound" src="assets/sounds/errorsound.wav" preload="auto"></audio>
 
 <script>
   const urlParams = new URLSearchParams(window.location.search);
@@ -65,77 +69,106 @@
   let lastScannedCode = "";
   let isProcessing = false;
 
-  function onScanSuccess(decodedText) {
-    if (isProcessing || decodedText === lastScannedCode) return;
-    
-    isProcessing = true;
-    lastScannedCode = decodedText;
-    
-    try {
-      const sound = document.getElementById('scan-sound');
-      if (sound) {
-        sound.currentTime = 0;
-        sound.play();
-      }
-    } catch(err) {
-      console.log("Audio playback blocked by browser settings until user interacts with page.");
+  // 🔊 SUCCESS SOUND HANDLER
+function playSuccessSound() {
+  try {
+    const sound = document.getElementById('scan-sound');
+    if (sound) {
+      sound.currentTime = 0;
+      sound.play();
     }
-    
-    const resultBox = document.getElementById("result-box");
-    
-    resultBox.className = "alert alert-warning fw-bold text-center mx-auto my-3";
-    resultBox.style.display = "block";
-    resultBox.innerText = "Processing scan... Please hold.";
-
-    let scannedId = decodedText;
-    if (decodedText.includes("id=")) {
-      scannedId = decodedText.split("id=")[1];
-      if (scannedId.includes("&")) {
-        scannedId = scannedId.split("&")[0];
-      }
-    }
-    scannedId = scannedId.trim();
-
-    fetch(googleWebAppUrl, {
-      method: "POST",
-      body: JSON.stringify({ id: scannedId }),
-      headers: { "Content-Type": "text/plain" }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === "success") {
-        resultBox.className = "alert alert-success fw-bold text-center mx-auto my-3";
-        resultBox.innerText = data.message;
-      } else {
-        resultBox.className = "alert alert-danger fw-bold text-center mx-auto my-3";
-        resultBox.innerText = "Error: " + data.message;
-      }
-      
-      setTimeout(() => {
-        isProcessing = false;
-        lastScannedCode = "";
-        resultBox.style.display = "none";
-      }, 6000);
-    })
-    .catch(err => {
-      console.error(err);
-      resultBox.className = "alert alert-danger fw-bold text-center mx-auto my-3";
-      resultBox.innerText = "Network Error: Could not reach Google Sheet.";
-      
-      setTimeout(() => {
-        isProcessing = false;
-        lastScannedCode = "";
-        resultBox.style.display = "none";
-      }, 6000);
-    });
+  } catch(err) {
+    console.log("Audio playback blocked by browser settings until user interacts with page.");
   }
+}
 
-  const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-    fps: 10, 
-    qrbox: { width: 250, height: 250 },
-    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+// ⚠️ ERROR / FAIL SOUND HANDLER
+function playErrorSound() {
+  try {
+    const sound = document.getElementById('error-sound');
+    if (sound) {
+      sound.currentTime = 0;
+      sound.play();
+    }
+  } catch(err) {
+    console.log("Audio playback blocked by browser settings until user interacts with page.");
+  }
+}
+
+function onScanSuccess(decodedText) {
+  if (isProcessing || decodedText === lastScannedCode) return;
+  
+  isProcessing = true;
+  lastScannedCode = decodedText;
+  
+  const resultBox = document.getElementById("result-box");
+  
+  // 1. Show processing state silently
+  resultBox.className = "alert alert-warning fw-bold text-center mx-auto my-3";
+  resultBox.style.display = "block";
+  resultBox.innerText = "Processing scan... Please hold.";
+
+  // Clean scanned ID input
+  let scannedId = decodedText;
+  if (decodedText.includes("id=")) {
+    scannedId = decodedText.split("id=")[1];
+    if (scannedId.includes("&")) {
+      scannedId = scannedId.split("&")[0];
+    }
+  }
+  scannedId = scannedId.trim();
+
+  // 2. Send request to Google Apps Script
+  fetch(googleWebAppUrl, {
+    method: "POST",
+    body: JSON.stringify({ id: scannedId }),
+    headers: { "Content-Type": "text/plain" }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === "success") {
+      // 🔊 PLAY SUCCESS SOUND
+      playSuccessSound();
+      resultBox.className = "alert alert-success fw-bold text-center mx-auto my-3";
+      resultBox.innerText = data.message; // Displays participant name / confirmation
+    } else {
+      // ⚠️ PLAY ERROR SOUND (e.g. ID not found or already checked in)
+      playErrorSound();
+      resultBox.className = "alert alert-danger fw-bold text-center mx-auto my-3";
+      resultBox.innerText = "Error: " + data.message;
+    }
+    
+    // Auto-hide alert box and reset scanner after 7 seconds
+    setTimeout(() => {
+      isProcessing = false;
+      lastScannedCode = "";
+      resultBox.style.display = "none";
+    }, 7000);
+  })
+  .catch(err => {
+    console.error(err);
+    
+    // ⚠️ PLAY ERROR SOUND ON NETWORK/CONNECTION FAILURE
+    playErrorSound();
+
+    resultBox.className = "alert alert-danger fw-bold text-center mx-auto my-3";
+    resultBox.innerText = "Network Error: Could not reach Google Sheet.";
+    
+    setTimeout(() => {
+      isProcessing = false;
+      lastScannedCode = "";
+      resultBox.style.display = "none";
+    }, 6000);
   });
-  html5QrcodeScanner.render(onScanSuccess);
+}
+
+// Initialize Html5QrcodeScanner
+const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+  fps: 10, 
+  qrbox: { width: 250, height: 250 },
+  formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+});
+html5QrcodeScanner.render(onScanSuccess);
 </script>
 
 </body>
