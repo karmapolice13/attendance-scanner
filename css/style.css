@@ -1,11 +1,22 @@
-/* Custom styles for the COA Logo Watermark and Camera Box */
+body {
+  /* Option A: Solid background color or subtle gradient */
+  background-color: #f4f6f9;
+
+  /* Option B: Background image with cover sizing */
+  background-image: url('../assets/images/coafacade.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  
+  /* Ensures background covers full height even if content is short */
+  min-height: 100vh;
+}
 .scanner-card {
   position: relative;
   overflow: hidden;
   max-width: 650px; /* Upper limit on wide screens */
 }
 
-/* 🏛️ COA LOGO BACKGROUND WATERMARK */
 .scanner-card::before {
   content: "";
   position: absolute;
