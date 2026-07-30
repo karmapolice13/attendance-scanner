@@ -1,3 +1,17 @@
+/* Custom Background Setup */
+.custom-bg {
+  background-image: url('../assets/images/coafacade.png');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Auth Card Adjustments */
+.auth-card .card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: none;
+}
+
 /* Custom Card Container */
 .scanner-card {
   position: relative;
@@ -5,7 +19,7 @@
   max-width: 650px;
 }
 
-/* 🏛️ COA LOGO BACKGROUND WATERMARK */
+/* COA LOGO BACKGROUND WATERMARK */
 .scanner-card::before {
   content: "";
   position: absolute;
@@ -14,7 +28,7 @@
   transform: translate(-50%, -50%);
   width: 80%;
   height: 80%;
-  background-image: url('../Commission_on_Audit.svg.webp');
+  background-image: url('../assets/logos/commissiononaudit_logo.webp');
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
