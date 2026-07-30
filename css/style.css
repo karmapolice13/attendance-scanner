@@ -1,60 +1,88 @@
-/* Custom Background Setup */
+/* ==========================================================================
+   1. PAGE & BACKGROUND STYLES
+   ========================================================================== */
 .custom-bg {
-  background-image: url('../assets/background/coafacade.png');
+  /* Dark overlay + background image */
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), 
+    url('../assets/background/coafacade.png');
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;
-  min-height: 100vh;           
+  min-height: 100vh;
   width: 100%;
 }
-/* Custom Instruction Subtitle Font */
+
+/* ==========================================================================
+   2. TYPOGRAPHY & HEADER LOGO
+   ========================================================================== */
 .scanner-instruction {
-  /* Clean system font stacks to choose from: */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  
-  /* Styling options */
-  font-weight: 500;        /* 400 = regular, 500 = medium, 600 = semi-bold, 700 = bold */
-  letter-spacing: 0.5px;  /* Slight spacing between letters */
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
-/* Header Banner Logo */
+
 .header-logo {
-  max-width: 450px; /* Adjust as needed for your logo size */
+  max-width: 450px;
   width: 100%;
   height: auto;
 }
 
-/* Optional styling if you want to tweak the instruction message look */
 .scanner-card .lead {
   font-weight: 500;
 }
+
+/* ==========================================================================
+   3. GLASSMORPHISM CARD CONTAINER & WATERMARK
+   ========================================================================== */
+/* Main Card Container */
+.scanner-card.card {
+  position: relative;
+  overflow: hidden;
+  max-width: 650px;
+  /* Use rgba with important to strip out Bootstrap's solid white background */
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* 🏛️ COA LOGO BACKGROUND WATERMARK INSIDE CARD */
+.scanner-card::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  background-image: url('../assets/logos/commissiononaudit_logo.webp');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure inner card body remains transparent so glass shows through */
+.scanner-card .card-body {
+  position: relative;
+  z-index: 1;
+  background: transparent !important;
+}
+
 /* Auth Card Adjustments */
 .auth-card .card {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   border: none;
 }
 
-/* Custom Card Container */
-.scanner-card {
-  position: relative;
-  overflow: hidden;
-  max-width: 650px;
-}
-
-/* Glassmorphism Card Effect */
-.scanner-card.card {
-  background-color: rgba(255, 255, 255, 0.75) !important; /* Semi-transparent white */
-  backdrop-filter: blur(10px);                            /* Blurs the background behind the card */
-  -webkit-backdrop-filter: blur(10px);                    /* Safari support */
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;   /* Subtle white border */
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);             /* Drop shadow */
-}
-
-.scanner-card .card-body {
-  background: transparent !important;
-}
-
-/* 📷 CAMERA VIEWPORT */
+/* ==========================================================================
+   4. CAMERA VIEWPORT & ALERTS
+   ========================================================================== */
 #reader {
   width: 100%;
   max-width: 500px;
@@ -69,7 +97,6 @@
   -webkit-transform: rotateY(180deg) !important;
 }
 
-/* Result Box Initial Sizing */
 #result-box {
   display: none;
   max-width: 420px;
