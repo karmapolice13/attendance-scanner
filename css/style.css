@@ -1,13 +1,13 @@
 /* Custom Background Setup */
 .custom-bg {
-  background-image: url('../assets/background/coafacade.png');
+  background-image: url('../assets/images/coafacade.png');
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;
-  min-height: 100vh;          
+  min-height: 100vh;           
   width: 100%;
-
+}
 /* Custom Instruction Subtitle Font */
 .scanner-instruction {
   /* Clean system font stacks to choose from: */
