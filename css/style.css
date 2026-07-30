@@ -41,10 +41,17 @@
   max-width: 650px;
 }
 
-/* Keep content visible above logo */
+/* Glassmorphism Card Effect */
+.scanner-card.card {
+  background-color: rgba(255, 255, 255, 0.75) !important; /* Semi-transparent white */
+  backdrop-filter: blur(10px);                            /* Blurs the background behind the card */
+  -webkit-backdrop-filter: blur(10px);                    /* Safari support */
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;   /* Subtle white border */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);             /* Drop shadow */
+}
+
 .scanner-card .card-body {
-  position: relative;
-  z-index: 1;
+  background: transparent !important;
 }
 
 /* 📷 CAMERA VIEWPORT */
