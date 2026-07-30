@@ -7,29 +7,17 @@
   background-attachment: fixed;
   min-height: 100vh;          
   width: 100%;
-}
-/* COA LOGO BACKGROUND WATERMARK */
-.scanner-card::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 80%;
-  background-image: url('../assets/logos/commissiononaudit_logo.webp');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0.12;
-  pointer-events: none;
-  z-index: 0;
-}
+  
 /* Header Banner Logo */
 .header-logo {
-  max-width: 450px;
-  width: 100%;      
-  height: auto;     
+  max-width: 450px; /* Adjust as needed for your logo size */
+  width: 100%;
+  height: auto;
+}
+
+/* Optional styling if you want to tweak the instruction message look */
+.scanner-card .lead {
+  font-weight: 500;
 }
 /* Auth Card Adjustments */
 .auth-card .card {
@@ -43,7 +31,6 @@
   overflow: hidden;
   max-width: 650px;
 }
-
 
 /* Keep content visible above logo */
 .scanner-card .card-body {
