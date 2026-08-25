@@ -117,17 +117,23 @@
     setInterval(updateClockAndDate, 1000);
   });
 
-  // ====================================================
-  // 2. DYNAMIC TITLE FETCH (Google Apps Script)
+ // ====================================================
+  // 2. DYNAMIC TITLE FETCH (WITH CACHE-BUSTING)
   // ====================================================
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
-  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
-  const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
+  const defaultWebAppUrl = "YOUR_APPS_SCRIPT_EXEC_URL_HERE";
+  
+  let googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   document.addEventListener('DOMContentLoaded', () => {
     const eventTitleElement = document.getElementById('event-title');
-    fetch(googleWebAppUrl, { redirect: "follow" })
+
+    // Append timestamp to prevent browser/CDN caching
+    const cacheBuster = (googleWebAppUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+    const fetchUrl = googleWebAppUrl + cacheBuster;
+
+    fetch(fetchUrl, { redirect: "follow" })
       .then(response => response.json())
       .then(data => {
         if (data.title && data.title !== "") {
@@ -142,7 +148,7 @@
         if (eventTitleElement) eventTitleElement.innerText = "Seminar Attendance Scanner";
       });
   });
-
+  
   // ====================================================
   // 3. AUDIO HANDLERS
   // ====================================================
