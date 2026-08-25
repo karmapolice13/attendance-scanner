@@ -6,12 +6,12 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed; /* Keeps background static */
+  background-attachment: fixed;
   position: relative;
   min-height: 100vh;
 }
 
-/* Dark Overlay to make white cards pop */
+/* Fixed Overlay to ensure dark slate tint renders above background image */
 body::before {
   content: "";
   position: fixed;
@@ -19,8 +19,16 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(15, 23, 42, 0.65); /* Soft dark slate tint */
-  z-index: -1;
+  background: rgba(15, 23, 42, 0.65); /* Soft dark slate overlay */
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Keep top-level layout containers above the overlay */
+header, 
+.container-fluid {
+  position: relative;
+  z-index: 1;
 }
 
 /* ====================================================
@@ -32,26 +40,19 @@ body::before {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
 }
 
-.scanner-card {
-  position: relative;
-  overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.98) !important;
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
-}
-
 /* Container Maximum Width */
 .max-w-xl {
   max-width: 1100px;
   margin: 0 auto;
 }
 
-/* Card Container */
+/* Scanner Card Container */
 .scanner-card {
   position: relative;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.98) !important;
   border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Background Watermark */
@@ -110,7 +111,7 @@ body::before {
 .digital-date {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #475569;
+  color: #cbd5e1; /* Adjusted for better visibility against dark overlay */
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
