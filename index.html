@@ -14,88 +14,115 @@
   <!-- 3. HTML5-QRCode Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 </head>
-  
-<body class="custom-bg min-vh-100 d-flex flex-column justify-content-center align-items-center py-4">
-  
-<div class="container d-flex justify-content-center">
-<div class="card scanner-card shadow-sm border-0 w-100 p-3 p-md-4">
-<div class="card-body text-center">
+<body class="bg-light min-vh-100 d-flex flex-column justify-content-center py-4">
+
+<!-- 1. TOP MAIN HEADER: Dynamic Seminar Title -->
+<header class="text-center mb-4">
+  <div class="container">
+    <h1 id="event-title" class="fw-bold text-primary display-6 px-3 py-2 bg-white rounded-3 shadow-sm d-inline-block border">
+      Loading Seminar Details...
+    </h1>
+  </div>
+</header>
+
+<!-- 2. MAIN TWO-COLUMN CONTAINER -->
+<div class="container-fluid px-md-4 max-w-xl">
+  <div class="card scanner-card shadow-sm border-0 w-100 p-3 p-md-4">
+    <div class="card-body p-2 p-md-3">
       
-<!-- Banner Logo Header -->
-<div class="mb-3 text-center">
-  <img 
-    src="assets/logos/whitelogo.png.png" 
-    alt="Seminar Attendance Scanner Header" 
-    class="img-fluid header-logo"
-  >
-</div>
+      <div class="row g-4 align-items-center">
+        
+        <!-- LEFT COLUMN: Participant Results Display -->
+        <div class="col-12 col-md-5 d-flex flex-column justify-content-center text-center border-end-md">
+          <h4 class="fw-bold text-secondary mb-3">Attendance Status</h4>
+          
+          <!-- Idle / Default State Message -->
+          <div id="idle-notice" class="text-muted p-4 border rounded-3 bg-light">
+            <p class="mb-0 fs-5">Awaiting QR scan...</p>
+            <small>Participant information will be displayed here upon scanning.</small>
+          </div>
 
-<!-- Digital Clock & Date Container -->
-<div class="text-center mb-3">
-  <div id="digital-clock" class="digital-clock">00:00:00 AM</div>
-  <!-- Date Display -->
-  <div id="digital-date" class="digital-date mt-2">Loading date...</div>
-</div>
-  
-<!-- Instruction Subtitle -->
-<p class="text-white lead mb-4 fs-6">Place the participant's QR code in front of the camera</p>
+          <!-- Result Alert Box (Shows participant name / status) -->
+          <div id="result-box" class="alert fw-bold text-center w-100 my-2 shadow-sm" role="alert" style="display: none;"></div>
+        </div>
 
-      <!-- Camera Viewport -->
-      <div id="reader" class="shadow-sm mb-3"></div>
+        <!-- RIGHT COLUMN: Scanner, Logo Banner, Clock & Instructions -->
+        <div class="col-12 col-md-7 text-center">
+          
+          <!-- Banner Logo Header -->
+          <div class="mb-3">
+            <img 
+              src="assets/logos/whitelogo.png" 
+              alt="Seminar Attendance Scanner Header" 
+              class="img-fluid header-logo"
+            >
+          </div>
 
-      <!-- Result Alert Box -->
-      <div id="result-box" class="alert fw-bold text-center mx-auto" role="alert"></div>
+          <!-- Digital Clock & Date -->
+          <div class="text-center mb-3">
+            <div id="digital-clock" class="digital-clock">00:00:00 AM</div>
+            <div id="digital-date" class="digital-date mt-2">Loading date...</div>
+          </div>
+
+          <!-- Instruction Subtitle -->
+          <p class="scanner-instruction text-muted lead mb-3 fs-6">
+            Place the participant's QR code in front of the webcam
+          </p>
+
+          <!-- Camera Viewport -->
+          <div id="reader" class="shadow-sm mx-auto"></div>
+
+        </div>
+
+      </div> <!-- /row -->
 
     </div>
   </div>
 </div>
 
-<audio id="scan-sound" src="assets/sounds/storescannerbeep.mp3" preload="auto"></audio>
-<audio id="error-sound" src="assets/sounds/errorsound.wav" preload="auto"></audio>
+<audio id="scan-sound" src="assets/sounds/barcode_sound_effect_1.mp3" preload="auto"></audio>
+<audio id="error-sound" src="assets/sounds/error_sound_effect.mp3" preload="auto"></audio>
 
+<!-- JavaScript Script Block -->
 <script>
   // ====================================================
-  // 1. BULLETPROOF CLOCK & DATE LOGIC
+  // 1. CLOCK & DATE LOGIC
   // ====================================================
   function updateClockAndDate() {
     const clockElement = document.getElementById('digital-clock');
     const dateElement = document.getElementById('digital-date');
-
     const now = new Date();
 
-    // 12-Hour Time Format
     let hours = now.getHours();
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
 
     hours = hours % 12;
-    hours = hours ? hours : 12; // Convert 0 to 12
+    hours = hours ? hours : 12;
     const formattedHours = String(hours).padStart(2, '0');
 
     if (clockElement) {
       clockElement.innerText = `${formattedHours}:${minutes}:${seconds} ${ampm}`;
     }
 
-    // Date Format (e.g., Tuesday, August 25, 2026)
     if (dateElement) {
       const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       dateElement.innerText = now.toLocaleDateString('en-US', dateOptions);
     }
   }
 
-  // Run timer immediately once the DOM is fully loaded
   document.addEventListener('DOMContentLoaded', () => {
-    updateClockAndDate(); // Run 1st tick immediately
-    setInterval(updateClockAndDate, 1000); // Tick every 1 second
+    updateClockAndDate();
+    setInterval(updateClockAndDate, 1000);
   });
 
   // ====================================================
-  // 2. SEMINAR TITLE FETCHING
+  // 2. DYNAMIC TITLE FETCH (Google Apps Script)
   // ====================================================
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
-  const defaultWebAppUrl = "YOUR_APPS_SCRIPT_EXEC_URL_HERE";
+  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
   const googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -123,18 +150,18 @@
     try {
       const sound = document.getElementById('scan-sound');
       if (sound) { sound.currentTime = 0; sound.play(); }
-    } catch(err) { console.log("Audio blocked until interaction."); }
+    } catch(err) { console.log("Audio playback blocked."); }
   }
 
   function playErrorSound() {
     try {
       const sound = document.getElementById('error-sound');
       if (sound) { sound.currentTime = 0; sound.play(); }
-    } catch(err) { console.log("Audio blocked until interaction."); }
+    } catch(err) { console.log("Audio playback blocked."); }
   }
 
   // ====================================================
-  // 4. QR SCANNER LOGIC
+  // 4. SCANNER LOGIC
   // ====================================================
   let lastScannedCode = "";
   let isProcessing = false;
@@ -146,7 +173,11 @@
     lastScannedCode = decodedText;
     
     const resultBox = document.getElementById("result-box");
-    resultBox.className = "alert alert-warning fw-bold text-center w-100 my-2 shadow-sm";
+    const idleNotice = document.getElementById("idle-notice");
+
+    if (idleNotice) idleNotice.style.display = "none";
+    
+    resultBox.className = "alert alert-warning fw-bold text-center w-100 my-2 shadow-sm fs-5";
     resultBox.style.display = "block";
     resultBox.innerText = "Processing scan... Please hold.";
 
@@ -166,11 +197,11 @@
     .then(data => {
       if (data.status === "success") {
         playSuccessSound();
-        resultBox.className = "alert alert-success fw-bold text-center w-100 my-2 shadow-sm";
+        resultBox.className = "alert alert-success fw-bold text-center w-100 my-2 p-3 shadow-sm fs-5";
         resultBox.innerText = data.message;
       } else {
         playErrorSound();
-        resultBox.className = "alert alert-danger fw-bold text-center w-100 my-2 shadow-sm";
+        resultBox.className = "alert alert-danger fw-bold text-center w-100 my-2 p-3 shadow-sm fs-5";
         resultBox.innerText = "Error: " + data.message;
       }
       
@@ -178,23 +209,24 @@
         isProcessing = false;
         lastScannedCode = "";
         resultBox.style.display = "none";
+        if (idleNotice) idleNotice.style.display = "block";
       }, 6000);
     })
     .catch(err => {
       console.error(err);
       playErrorSound();
-      resultBox.className = "alert alert-danger fw-bold text-center w-100 my-2 shadow-sm";
+      resultBox.className = "alert alert-danger fw-bold text-center w-100 my-2 p-3 shadow-sm fs-5";
       resultBox.innerText = "Network Error: Could not reach Google Sheet.";
       
       setTimeout(() => {
         isProcessing = false;
         lastScannedCode = "";
         resultBox.style.display = "none";
+        if (idleNotice) idleNotice.style.display = "block";
       }, 6000);
     });
   }
 
-  // Render camera
   const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
     fps: 10, 
     qrbox: { width: 250, height: 250 },
