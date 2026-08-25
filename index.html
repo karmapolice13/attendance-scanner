@@ -57,6 +57,52 @@
 <audio id="error-sound" src="assets/sounds/errorsound.wav" preload="auto"></audio>
 
 <script>
+  function startDigitalClock() {
+  function updateClock() {
+    const now = new Date();
+    
+    // --- 1. TIME FORMATTING ---
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    // Convert to 12-hour format
+    hours = hours % 12;
+    hours = hours ? hours : 12; // '0' becomes '12'
+    const formattedHours = String(hours).padStart(2, '0');
+
+    const clockElement = document.getElementById('digital-clock');
+    if (clockElement) {
+      clockElement.innerText = `${formattedHours}:${minutes}:${seconds} ${ampm}`;
+    }
+
+    // --- 2. DATE FORMATTING ---
+    const dateOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    // Result format example: "Tuesday, August 25, 2026"
+    const formattedDate = now.toLocaleDateString('en-US', dateOptions);
+
+    const dateElement = document.getElementById('digital-date');
+    if (dateElement) {
+      dateElement.innerText = formattedDate;
+    }
+  }
+
+  updateClock(); // Run immediately on page load
+  setInterval(updateClock, 1000); // Refresh every second
+}
+
+// Start clock when DOM is ready
+window.addEventListener('DOMContentLoaded', () => {
+  startDigitalClock();
+});
+
+  
   const urlParams = new URLSearchParams(window.location.search);
   const customScriptUrl = urlParams.get('scriptUrl');
 
