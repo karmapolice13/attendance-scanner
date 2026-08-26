@@ -1,15 +1,16 @@
 /* ====================================================
    1. BASE PAGE & BACKGROUND STYLES
    ==================================================== */
-body {
-  font-family: 'Cinzel', serif;
-  background-image: url('../assets/background/coafacade.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  position: relative;
-  min-height: 100vh;
+body /* Seminar Main Title Banner */
+#event-title {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 1px !important;         
+  color: #000000 !important;              
+  text-transform: uppercase;              
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Fixed Overlay to ensure dark slate tint renders above background image */
