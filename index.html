@@ -47,9 +47,9 @@
             <p class="mb-0 fs-5">Awaiting QR scan...</p>
             <small>Participant information will be displayed here upon scanning.</small>
           </div>
-
+          
           <!-- Result Alert Box (Shows participant name / status) -->
-          <div id="result-box" class="alert fw-bold text-center w-100 my-2 shadow-sm" role="alert" style="display: none;"></div>
+          <div id="scan-result" class="alert fw-bold text-center w-100 my-2 shadow-sm" role="alert" style="display: none;"></div>
         </div>
 
         <!-- RIGHT COLUMN: Scanner, Logo Banner, Clock & Instructions -->
@@ -78,6 +78,13 @@
           <!-- Camera Viewport -->
           <div id="reader" class="shadow-sm mx-auto"></div>
 
+          <!-- Network Status Indicator Badge -->
+          <div id="network-status-container" class="mt-3 text-center">
+            <span id="queue-status-badge" class="badge bg-success px-3 py-2">
+              ✓ Online & Synced
+            </span>
+          </div>
+          
         </div>
 
       </div> <!-- /row -->
@@ -85,7 +92,7 @@
     </div>
   </div>
 </div>
-
+    
 <audio id="scan-sound" src="assets/sounds/barcode_sound_effect_1.mp3" preload="auto"></audio>
 <audio id="error-sound" src="assets/sounds/error_sound_effect.mp3" preload="auto"></audio>
 
