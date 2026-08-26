@@ -20,14 +20,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 </head>
   
-  <body class="min-vh-100 d-flex flex-column justify-content-center py-4">
+<body class="min-vh-100 d-flex flex-column justify-content-center py-4">
 
 <!-- 1. TOP MAIN HEADER: Dynamic Seminar Title -->
 <header class="text-center mb-4">
   <div class="container">
     <h1 id="event-title" class="fw-bold display-6 px-3 py-2 bg-white rounded-3 shadow-sm d-inline-block border">
-  Loading Seminar Details...
-</h1>
+      Loading Seminar Details...
+    </h1>
   </div>
 </header>
 
@@ -93,13 +93,17 @@
   </div>
 </div>
     
+<!-- Audio Feedback Elements -->
 <audio id="scan-sound" src="assets/sounds/barcode_sound_effect_1.mp3" preload="auto"></audio>
 <audio id="error-sound" src="assets/sounds/errorsound.wav" preload="auto"></audio>
 
-<!-- JavaScript Script Block -->
+<!-- 1. Load Main JavaScript Engine First -->
+<script src="js/script.js"></script>
+
+<!-- 2. Page UI Scripts (Clock & Dynamic Title) -->
 <script>
   // ====================================================
-  // 1. CLOCK & DATE LOGIC
+  // CLOCK & DATE LOGIC
   // ====================================================
   function updateClockAndDate() {
     const clockElement = document.getElementById('digital-clock');
@@ -125,141 +129,36 @@
     }
   }
 
+  // ====================================================
+  // DYNAMIC TITLE FETCH (WITH CACHE-BUSTING)
+  // ====================================================
   document.addEventListener('DOMContentLoaded', () => {
     updateClockAndDate();
     setInterval(updateClockAndDate, 1000);
-  });
 
- // ====================================================
-  // 2. DYNAMIC TITLE FETCH (WITH CACHE-BUSTING)
-  // ====================================================
-  document.addEventListener('DOMContentLoaded', () => {
     const eventTitleElement = document.getElementById('event-title');
 
-    // Use SCRIPT_URL from script.js and append timestamp to prevent caching
-    const cacheBuster = (SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-    const fetchUrl = SCRIPT_URL + cacheBuster;
+    if (typeof SCRIPT_URL !== 'undefined') {
+      const cacheBuster = (SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+      const fetchUrl = SCRIPT_URL + cacheBuster;
 
-    fetch(fetchUrl, { redirect: "follow" })
-      .then(response => response.json())
-      .then(data => {
-        if (data.title && data.title !== "") {
-          if (eventTitleElement) eventTitleElement.innerText = data.title;
-          document.title = data.title;
-        } else {
+      fetch(fetchUrl, { redirect: "follow" })
+        .then(response => response.json())
+        .then(data => {
+          if (data.title && data.title !== "") {
+            if (eventTitleElement) eventTitleElement.innerText = data.title;
+            document.title = data.title;
+          } else {
+            if (eventTitleElement) eventTitleElement.innerText = "Seminar Attendance Scanner";
+          }
+        })
+        .catch(err => {
+          console.error("Could not fetch sheet title:", err);
           if (eventTitleElement) eventTitleElement.innerText = "Seminar Attendance Scanner";
-        }
-      })
-      .catch(err => {
-        console.error("Could not fetch sheet title:", err);
-        if (eventTitleElement) eventTitleElement.innerText = "Seminar Attendance Scanner";
-      });
-  });
-  
-  // ====================================================
-  // 3. AUDIO HANDLERS
-  // ====================================================
-  function playSuccessSound() {
-    try {
-      const sound = document.getElementById('scan-sound');
-      if (sound) { sound.currentTime = 0; sound.play(); }
-    } catch(err) { console.log("Audio playback blocked."); }
-  }
-
-  function playErrorSound() {
-    try {
-      const sound = document.getElementById('error-sound');
-      if (sound) { sound.currentTime = 0; sound.play(); }
-    } catch(err) { console.log("Audio playback blocked."); }
-  }
-
-  // ====================================================
-  // 4. SCANNER LOGIC
-  // ====================================================
-  let lastScannedCode = "";
-  let isProcessing = false;
-
-  function onScanSuccess(decodedText) {
-    if (isProcessing || decodedText === lastScannedCode) return;
-    
-    isProcessing = true;
-    lastScannedCode = decodedText;
-    
-    const resultBox = document.getElementById("result-box");
-    const idleNotice = document.getElementById("idle-notice");
-
-    if (idleNotice) idleNotice.style.display = "none";
-    
-    resultBox.className = "alert alert-warning fw-bold text-center w-100 my-2 shadow-sm fs-5";
-    resultBox.style.display = "block";
-    resultBox.innerText = "Processing scan... Please hold.";
-
-    let scannedId = decodedText;
-    if (decodedText.includes("id=")) {
-      scannedId = decodedText.split("id=")[1];
-      if (scannedId.includes("&")) scannedId = scannedId.split("&")[0];
+        });
     }
-    scannedId = scannedId.trim();
-
-    fetch(googleWebAppUrl, {
-      method: "POST",
-      body: JSON.stringify({ id: scannedId }),
-      headers: { "Content-Type": "text/plain" }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === "success") {
-        playSuccessSound();
-        resultBox.className = "alert alert-success fw-bold text-center w-100 my-2 p-3 shadow-sm fs-5";
-        resultBox.innerText = data.message;
-      } else {
-        playErrorSound();
-        resultBox.className = "alert alert-danger fw-bold text-center w-100 my-2 p-3 shadow-sm fs-5";
-        resultBox.innerText = "Error: " + data.message;
-      }
-      
-      setTimeout(() => {
-        isProcessing = false;
-        lastScannedCode = "";
-        resultBox.style.display = "none";
-        if (idleNotice) idleNotice.style.display = "block";
-      }, 6000);
-    })
-    .catch(err => {
-      console.error(err);
-      playErrorSound();
-      resultBox.className = "alert alert-danger fw-bold text-center w-100 my-2 p-3 shadow-sm fs-5";
-      resultBox.innerText = "Network Error: Could not reach Google Sheet.";
-      
-      setTimeout(() => {
-        isProcessing = false;
-        lastScannedCode = "";
-        resultBox.style.display = "none";
-        if (idleNotice) idleNotice.style.display = "block";
-      }, 6000);
-    });
-  }
-
-  const html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
-    fps: 10, 
-    qrbox: { width: 250, height: 250 },
-    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
   });
-  html5QrcodeScanner.render(onScanSuccess);
 </script>
 
-<!-- Network Status Indicator Badge (Place inside your container/header) -->
-  <div id="network-status-container" class="mt-2 text-center">
-    <span id="queue-status-badge" class="badge bg-success px-3 py-2">
-      ✓ Online & Synced
-    </span>
-  </div>
-
-  <!-- Audio Feedback Elements -->
-  <audio id="scan-sound" src="assets/sounds/barcode_sound_effect_1.mp3" preload="auto"></audio>
-  <audio id="error-sound" src="assets/sounds/error_sound_effect.mp3" preload="auto"></audio>
-
-  <!-- JavaScript Files -->
-  <script src="js/script.js"> </script>
 </body>
 </html>
