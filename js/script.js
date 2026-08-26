@@ -1,28 +1,34 @@
-// ====================================================
-// OFFLINE QUEUE & NETWORK MANAGEMENT ENGINE
-// ====================================================
+// 1. Dynamic Script URL from ?scriptUrl= parameter with fallback
+const urlParams = new URLSearchParams(window.location.search);
+const SCRIPT_URL = urlParams.get('scriptUrl') || "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
 
-const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; // Replace with your deployment URL
+// 2. Secret Security Token (Must match SECRET_API_KEY in Code.gs)
+const API_KEY = "COA_SEMINAR_2026_SECURE_TOKEN_9981";
+
 const QUEUE_STORAGE_KEY = "attendance_offline_queue";
 
-// Elements & Audio
-const successAudio = document.getElementById("sound-success");
-const errorAudio = document.getElementById("sound-error");
+// Local Audio Elements & Status Badge
+const successAudio = document.getElementById("scan-sound");
+const errorAudio = document.getElementById("error-sound");
 const queueBadge = document.getElementById("queue-status-badge");
 
-// Initialize Queue on startup
+// Initialize Offline Queue on startup
 let offlineQueue = JSON.parse(localStorage.getItem(QUEUE_STORAGE_KEY) || "[]");
 updateNetworkUI();
 
-// Watch Network Connection Status
+// Network Status Listeners
 window.addEventListener("online", syncOfflineQueue);
 window.addEventListener("offline", updateNetworkUI);
 
+// ====================================================
+// PRIMARY SCAN & NETWORK ENGINE
+// ====================================================
+
 /**
- * Primary QR Scan Callback Handler
+ * Primary QR Scan Callback Handler (Triggered by HTML5-QRCode Scanner)
  */
 function onScanSuccess(decodedText, decodedResult) {
-  // Prevent rapid double-scans in short succession
+  // 1. Camera Cooldown Lock: Prevent rapid double-scans
   if (window.isProcessingScan) return;
   window.isProcessingScan = true;
 
@@ -33,46 +39,48 @@ function onScanSuccess(decodedText, decodedResult) {
   };
 
   if (navigator.onLine) {
-    // Online: Send immediately to Google Apps Script
+    // Online: Send directly to Google Apps Script
     sendScanToBackend(scanData);
   } else {
     // Offline: Save to browser LocalStorage queue
     saveToOfflineQueue(scanData);
   }
 
-  // Cooldown reset after 3 seconds
+  // Release camera cooldown after 3 seconds
   setTimeout(() => {
     window.isProcessingScan = false;
   }, 3000);
 }
 
 /**
- * Send Scan Data to Google Apps Script
+ * Send Scan Data to Google Apps Script with Security Token
  */
 function sendScanToBackend(scanData) {
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ id: scanData.id })
+    body: JSON.stringify({ 
+      id: scanData.id,
+      apiKey: API_KEY // Secret security token
+    })
   })
     .then(response => response.json())
     .then(data => {
       if (data.status === "success") {
         playSuccess(data.message);
       } else {
-        playError(data.message || "ID Not Found in Masterlist");
+        playError(data.message || "ID Not Found or Cooldown Active");
       }
     })
     .catch(err => {
-      // Handle mid-request network failure by queueing
       console.warn("Network request failed. Saving scan to offline queue.", err);
       saveToOfflineQueue(scanData);
     });
 }
 
 /**
- * Save Scan to LocalStorage Queue
+ * Save Scan to LocalStorage Queue when Offline
  */
 function saveToOfflineQueue(scanData) {
   offlineQueue.push(scanData);
@@ -83,7 +91,7 @@ function saveToOfflineQueue(scanData) {
 }
 
 /**
- * Synchronize Queued Offline Scans to Backend when Connection Restores
+ * Synchronize Queued Offline Scans when Internet Restores
  */
 function syncOfflineQueue() {
   updateNetworkUI();
@@ -93,19 +101,20 @@ function syncOfflineQueue() {
   const queueToSync = [...offlineQueue];
   console.log(`Syncing ${queueToSync.length} offline scans...`);
 
-  // Process queue sequentially
   Promise.all(
     queueToSync.map(item =>
       fetch(SCRIPT_URL, {
         method: "POST",
         mode: "cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ id: item.id })
+        body: JSON.stringify({ 
+          id: item.id,
+          apiKey: API_KEY 
+        })
       }).then(res => res.json())
     )
   )
     .then(() => {
-      // Clear queue upon successful sync
       offlineQueue = [];
       localStorage.removeItem(QUEUE_STORAGE_KEY);
       playSuccess("All offline scans successfully synced!");
@@ -117,9 +126,10 @@ function syncOfflineQueue() {
     });
 }
 
-/**
- * Audio & UI Visual Feedback Helpers
- */
+// ====================================================
+// UI & AUDIO FEEDBACK HELPERS
+// ====================================================
+
 function playSuccess(msg) {
   if (successAudio) {
     successAudio.currentTime = 0;
