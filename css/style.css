@@ -67,24 +67,6 @@ h2, h3, h4, .scanner-instruction {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Watermark */
-.scanner-card::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 70%;
-  height: 70%;
-  background-image: url('../Commission_on_Audit.svg.webp');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0.10;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .scanner-card .card-body {
   position: relative;
   z-index: 1;
