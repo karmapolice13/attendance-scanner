@@ -12,6 +12,9 @@ const successAudio = document.getElementById("scan-sound");
 const errorAudio = document.getElementById("error-sound");
 const queueBadge = document.getElementById("queue-status-badge");
 
+// Global timer variable for clearing results
+let resultDisplayTimeout = null;
+
 // Initialize Offline Queue on startup
 let offlineQueue = JSON.parse(localStorage.getItem(QUEUE_STORAGE_KEY) || "[]");
 
@@ -23,15 +26,12 @@ window.addEventListener("offline", updateNetworkUI);
 // PRIMARY SCAN & NETWORK ENGINE
 // ====================================================
 
-/**
- * Primary QR Scan Callback Handler (Triggered by HTML5-QRCode Scanner)
- */
 function onScanSuccess(decodedText, decodedResult) {
-  // 1. Camera Cooldown Lock: Prevent rapid double-scans
+  // Cooldown Lock: Prevent rapid double-scans
   if (window.isProcessingScan) return;
   window.isProcessingScan = true;
 
-  // Clean raw scanned text (supports both raw IDs and URLs containing ?id=)
+  // Clean raw scanned text (supports raw IDs and URLs containing ?id=)
   let scannedId = decodedText.trim();
   if (scannedId.includes("id=")) {
     scannedId = scannedId.split("id=")[1];
@@ -41,33 +41,26 @@ function onScanSuccess(decodedText, decodedResult) {
 
   const scanData = {
     id: scannedId,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent // Metadata for audit log
   };
 
   if (navigator.onLine) {
-    // Online: Send directly to Google Apps Script
     sendScanToBackend(scanData);
   } else {
-    // Offline: Save to browser LocalStorage queue
     saveToOfflineQueue(scanData);
   }
 
-  // Release camera cooldown after 3 seconds
+  // Release camera cooldown lock after 3 seconds
   setTimeout(() => {
     window.isProcessingScan = false;
   }, 3000);
 }
 
-/**
- * Optional Scan Error Handler (Ignored during continuous scanning)
- */
 function onScanError(errorMessage) {
-  // Low-level scan errors happen every frame when no QR is visible; safe to ignore
+  // Ignore continuous frame-scan errors
 }
 
-/**
- * Send Scan Data to Google Apps Script with Security Token
- */
 function sendScanToBackend(scanData) {
   fetch(SCRIPT_URL, {
     method: "POST",
@@ -75,20 +68,17 @@ function sendScanToBackend(scanData) {
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ 
       id: scanData.id,
-      apiKey: API_KEY // Secret security token
+      apiKey: API_KEY,
+      userAgent: scanData.userAgent
     })
   })
     .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
       return response.json();
     })
     .then(data => {
-      console.log("Backend Response:", data);
-
       if (data.status === "success") {
-        playSuccess(data.message || `WELCOME!<br>ID: ${scanData.id}`);
+        playSuccess(data.message);
       } else {
         playError(data.message || "ID Not Found or Cooldown Active");
       }
@@ -100,9 +90,6 @@ function sendScanToBackend(scanData) {
     });
 }
 
-/**
- * Save Scan to LocalStorage Queue when Offline
- */
 function saveToOfflineQueue(scanData) {
   offlineQueue.push(scanData);
   localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(offlineQueue));
@@ -111,16 +98,12 @@ function saveToOfflineQueue(scanData) {
   updateNetworkUI();
 }
 
-/**
- * Synchronize Queued Offline Scans when Internet Restores
- */
 function syncOfflineQueue() {
   updateNetworkUI();
   
   if (!navigator.onLine || offlineQueue.length === 0) return;
 
   const queueToSync = [...offlineQueue];
-  console.log(`Syncing ${queueToSync.length} offline scans...`);
 
   Promise.all(
     queueToSync.map(item =>
@@ -130,7 +113,8 @@ function syncOfflineQueue() {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ 
           id: item.id,
-          apiKey: API_KEY 
+          apiKey: API_KEY,
+          userAgent: item.userAgent
         })
       }).then(res => res.json())
     )
@@ -171,15 +155,27 @@ function displayResultOnScreen(msg, textClass) {
   const idleNotice = document.getElementById("idle-notice");
   const resultBox = document.getElementById("scan-result");
 
-  if (resultBox) {
-    if (idleNotice) idleNotice.style.display = "none";
-    
-    const alertClass = textClass.includes("success") ? "alert-success" : "alert-danger";
-    
-    resultBox.className = `alert ${alertClass} fw-bold text-center w-100 my-2 shadow-sm fs-5`;
-    resultBox.innerHTML = msg;
-    resultBox.style.display = "block";
+  if (!resultBox) return;
+
+  // Clear any pending timeout from previous scans
+  if (resultDisplayTimeout) {
+    clearTimeout(resultDisplayTimeout);
   }
+
+  // Hide idle message and show result box
+  if (idleNotice) idleNotice.style.display = "none";
+  
+  const alertClass = textClass.includes("success") ? "alert-success" : "alert-danger";
+  resultBox.className = `alert ${alertClass} fw-bold text-center w-100 my-2 shadow-sm fs-5`;
+  resultBox.innerHTML = msg;
+  resultBox.style.display = "block";
+
+  // Auto-disappear after 4 seconds and return to idle state
+  resultDisplayTimeout = setTimeout(() => {
+    resultBox.style.display = "none";
+    resultBox.innerHTML = "";
+    if (idleNotice) idleNotice.style.display = "block";
+  }, 4000);
 }
 
 function updateNetworkUI() {
@@ -198,7 +194,7 @@ function updateNetworkUI() {
 }
 
 // ====================================================
-// INITIALIZE SCANNER ENGINE & NETWORK STATE
+// INITIALIZE SCANNER ENGINE
 // ====================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -209,11 +205,9 @@ document.addEventListener("DOMContentLoaded", () => {
     { 
       fps: 10, 
       qrbox: { width: 250, height: 250 },
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true
-      }
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true }
     },
-    /* verbose= */ false
+    false
   );
   html5QrcodeScanner.render(onScanSuccess, onScanError);
 });
