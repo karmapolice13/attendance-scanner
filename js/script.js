@@ -53,6 +53,13 @@ function onScanSuccess(decodedText, decodedResult) {
 }
 
 /**
+ * Optional Scan Error Handler (Ignored during continuous scanning)
+ */
+function onScanError(errorMessage) {
+  // Low-level scan errors happen every frame when no QR is visible; safe to ignore
+}
+
+/**
  * Send Scan Data to Google Apps Script with Security Token
  */
 function sendScanToBackend(scanData) {
@@ -158,7 +165,7 @@ function displayResultOnScreen(msg, textClass) {
     const alertClass = textClass.includes("success") ? "alert-success" : "alert-danger";
     
     resultBox.className = `alert ${alertClass} fw-bold text-center w-100 my-2 shadow-sm`;
-    resultBox.textContent = msg;
+    resultBox.innerHTML = msg; // Allows formatted participant names / HTML line breaks
     resultBox.style.display = "block";
   }
 }
@@ -177,3 +184,22 @@ function updateNetworkUI() {
     queueBadge.innerHTML = `✓ Online & Synced`;
   }
 }
+
+// ====================================================
+// INITIALIZE SCANNER ENGINE
+// ====================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+  const html5QrcodeScanner = new Html5QrcodeScanner(
+    "reader",
+    { 
+      fps: 10, 
+      qrbox: { width: 250, height: 250 },
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true
+      }
+    },
+    /* verbose= */ false
+  );
+  html5QrcodeScanner.render(onScanSuccess, onScanError);
+});
