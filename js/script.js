@@ -147,10 +147,19 @@ function playError(msg) {
 }
 
 function displayResultOnScreen(msg, textClass) {
-  const resultContainer = document.getElementById("scan-result");
-  if (resultContainer) {
-    resultContainer.className = `fw-bold text-center h4 my-3 ${textClass}`;
-    resultContainer.textContent = msg;
+  const idleNotice = document.getElementById("idle-notice");
+  const resultBox = document.getElementById("scan-result");
+
+  if (resultBox) {
+    // Hide idle notice and display result box
+    if (idleNotice) idleNotice.style.display = "none";
+    
+    // Convert textClass (e.g. "text-success") to Bootstrap alert classes
+    const alertClass = textClass.includes("success") ? "alert-success" : "alert-danger";
+    
+    resultBox.className = `alert ${alertClass} fw-bold text-center w-100 my-2 shadow-sm`;
+    resultBox.textContent = msg;
+    resultBox.style.display = "block";
   }
 }
 
