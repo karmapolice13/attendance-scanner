@@ -14,7 +14,6 @@ const queueBadge = document.getElementById("queue-status-badge");
 
 // Initialize Offline Queue on startup
 let offlineQueue = JSON.parse(localStorage.getItem(QUEUE_STORAGE_KEY) || "[]");
-updateNetworkUI();
 
 // Network Status Listeners
 window.addEventListener("online", syncOfflineQueue);
@@ -28,19 +27,28 @@ window.addEventListener("offline", updateNetworkUI);
  * Primary QR Scan Callback Handler (Triggered by HTML5-QRCode Scanner)
  */
 function onScanSuccess(decodedText, decodedResult) {
-  // Cooldown Lock: Prevent rapid double-scans
+  // 1. Camera Cooldown Lock: Prevent rapid double-scans
   if (window.isProcessingScan) return;
   window.isProcessingScan = true;
 
-  const scannedId = decodedText.trim();
+  // Clean raw scanned text (supports both raw IDs and URLs containing ?id=)
+  let scannedId = decodedText.trim();
+  if (scannedId.includes("id=")) {
+    scannedId = scannedId.split("id=")[1];
+    if (scannedId.includes("&")) scannedId = scannedId.split("&")[0];
+    scannedId = scannedId.trim();
+  }
+
   const scanData = {
     id: scannedId,
     timestamp: new Date().toISOString()
   };
 
   if (navigator.onLine) {
+    // Online: Send directly to Google Apps Script
     sendScanToBackend(scanData);
   } else {
+    // Offline: Save to browser LocalStorage queue
     saveToOfflineQueue(scanData);
   }
 
@@ -51,14 +59,14 @@ function onScanSuccess(decodedText, decodedResult) {
 }
 
 /**
- * Scan Error Callback (Safe to ignore per-frame scan warnings)
+ * Optional Scan Error Handler (Ignored during continuous scanning)
  */
 function onScanError(errorMessage) {
-  // Ignored during normal operation
+  // Low-level scan errors happen every frame when no QR is visible; safe to ignore
 }
 
 /**
- * Send Scan Data to Google Apps Script
+ * Send Scan Data to Google Apps Script with Security Token
  */
 function sendScanToBackend(scanData) {
   fetch(SCRIPT_URL, {
@@ -67,7 +75,7 @@ function sendScanToBackend(scanData) {
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ 
       id: scanData.id,
-      apiKey: API_KEY 
+      apiKey: API_KEY // Secret security token
     })
   })
     .then(response => {
@@ -80,14 +88,14 @@ function sendScanToBackend(scanData) {
       console.log("Backend Response:", data);
 
       if (data.status === "success") {
-        playSuccess(data.message || `Welcome! ID: ${scanData.id}`);
+        playSuccess(data.message || `WELCOME!<br>ID: ${scanData.id}`);
       } else {
         playError(data.message || "ID Not Found or Cooldown Active");
       }
     })
     .catch(err => {
       console.warn("Network request failed. Saving scan to offline queue.", err);
-      playError("Connection issue. Scan queued locally.");
+      playError("Connection Issue: Scan saved offline.");
       saveToOfflineQueue(scanData);
     });
 }
@@ -99,7 +107,7 @@ function saveToOfflineQueue(scanData) {
   offlineQueue.push(scanData);
   localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(offlineQueue));
   
-  playSuccess(`Offline Mode: Saved ID ${scanData.id} locally`);
+  playSuccess(`Offline: Saved ID ${scanData.id} locally`);
   updateNetworkUI();
 }
 
@@ -168,7 +176,7 @@ function displayResultOnScreen(msg, textClass) {
     
     const alertClass = textClass.includes("success") ? "alert-success" : "alert-danger";
     
-    resultBox.className = `alert ${alertClass} fw-bold text-center w-100 my-2 shadow-sm`;
+    resultBox.className = `alert ${alertClass} fw-bold text-center w-100 my-2 shadow-sm fs-5`;
     resultBox.innerHTML = msg;
     resultBox.style.display = "block";
   }
@@ -190,10 +198,12 @@ function updateNetworkUI() {
 }
 
 // ====================================================
-// INITIALIZE SCANNER ENGINE
+// INITIALIZE SCANNER ENGINE & NETWORK STATE
 // ====================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  updateNetworkUI();
+
   const html5QrcodeScanner = new Html5QrcodeScanner(
     "reader",
     { 
