@@ -136,9 +136,9 @@
   document.addEventListener('DOMContentLoaded', () => {
     const eventTitleElement = document.getElementById('event-title');
 
-    // Append timestamp to prevent browser/CDN caching
-    const cacheBuster = (googleWebAppUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-    const fetchUrl = googleWebAppUrl + cacheBuster;
+    // Use SCRIPT_URL from script.js and append timestamp to prevent caching
+    const cacheBuster = (SCRIPT_URL.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+    const fetchUrl = SCRIPT_URL + cacheBuster;
 
     fetch(fetchUrl, { redirect: "follow" })
       .then(response => response.json())
