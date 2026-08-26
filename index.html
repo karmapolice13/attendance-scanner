@@ -133,12 +133,6 @@
  // ====================================================
   // 2. DYNAMIC TITLE FETCH (WITH CACHE-BUSTING)
   // ====================================================
-  const urlParams = new URLSearchParams(window.location.search);
-  const customScriptUrl = urlParams.get('scriptUrl');
-  const defaultWebAppUrl = "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
-  
-  let googleWebAppUrl = customScriptUrl ? decodeURIComponent(customScriptUrl) : defaultWebAppUrl;
-
   document.addEventListener('DOMContentLoaded', () => {
     const eventTitleElement = document.getElementById('event-title');
 
