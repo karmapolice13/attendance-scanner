@@ -2,6 +2,7 @@
    1. BASE PAGE & BACKGROUND STYLES
    ==================================================== */
 body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-image: url('../assets/background/coafacade.png');
   background-size: cover;
   background-position: center;
@@ -34,7 +35,13 @@ header,
 /* ====================================================
    2. TOP BANNER & CARD STYLING
    ==================================================== */
+/* Seminar Main Title Banner */
 #event-title {
+  font-family: 'Montserrat', sans-serif !important;
+  font-weight: 800 !important;          /* Extra Bold */
+  letter-spacing: 0.5px !important;       /* Clean spacing between letters */
+  color: #0f172a !important;              /* Deep slate dark blue */
+  text-transform: uppercase;              /* Gives an official seminar look */
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
