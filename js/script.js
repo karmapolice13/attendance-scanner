@@ -28,7 +28,7 @@ window.addEventListener("offline", updateNetworkUI);
  * Primary QR Scan Callback Handler (Triggered by HTML5-QRCode Scanner)
  */
 function onScanSuccess(decodedText, decodedResult) {
-  // 1. Camera Cooldown Lock: Prevent rapid double-scans
+  // Cooldown Lock: Prevent rapid double-scans
   if (window.isProcessingScan) return;
   window.isProcessingScan = true;
 
@@ -39,10 +39,8 @@ function onScanSuccess(decodedText, decodedResult) {
   };
 
   if (navigator.onLine) {
-    // Online: Send directly to Google Apps Script
     sendScanToBackend(scanData);
   } else {
-    // Offline: Save to browser LocalStorage queue
     saveToOfflineQueue(scanData);
   }
 
@@ -53,14 +51,14 @@ function onScanSuccess(decodedText, decodedResult) {
 }
 
 /**
- * Optional Scan Error Handler (Ignored during continuous scanning)
+ * Scan Error Callback (Safe to ignore per-frame scan warnings)
  */
 function onScanError(errorMessage) {
-  // Low-level scan errors happen every frame when no QR is visible; safe to ignore
+  // Ignored during normal operation
 }
 
 /**
- * Send Scan Data to Google Apps Script with Security Token
+ * Send Scan Data to Google Apps Script
  */
 function sendScanToBackend(scanData) {
   fetch(SCRIPT_URL, {
@@ -69,19 +67,27 @@ function sendScanToBackend(scanData) {
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ 
       id: scanData.id,
-      apiKey: API_KEY // Secret security token
+      apiKey: API_KEY 
     })
   })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
+      console.log("Backend Response:", data);
+
       if (data.status === "success") {
-        playSuccess(data.message);
+        playSuccess(data.message || `Welcome! ID: ${scanData.id}`);
       } else {
         playError(data.message || "ID Not Found or Cooldown Active");
       }
     })
     .catch(err => {
       console.warn("Network request failed. Saving scan to offline queue.", err);
+      playError("Connection issue. Scan queued locally.");
       saveToOfflineQueue(scanData);
     });
 }
@@ -93,7 +99,7 @@ function saveToOfflineQueue(scanData) {
   offlineQueue.push(scanData);
   localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(offlineQueue));
   
-  playSuccess(`Offline: Saved ID ${scanData.id} locally`);
+  playSuccess(`Offline Mode: Saved ID ${scanData.id} locally`);
   updateNetworkUI();
 }
 
@@ -158,14 +164,12 @@ function displayResultOnScreen(msg, textClass) {
   const resultBox = document.getElementById("scan-result");
 
   if (resultBox) {
-    // Hide idle notice and display result box
     if (idleNotice) idleNotice.style.display = "none";
     
-    // Convert textClass (e.g. "text-success") to Bootstrap alert classes
     const alertClass = textClass.includes("success") ? "alert-success" : "alert-danger";
     
     resultBox.className = `alert ${alertClass} fw-bold text-center w-100 my-2 shadow-sm`;
-    resultBox.innerHTML = msg; // Allows formatted participant names / HTML line breaks
+    resultBox.innerHTML = msg;
     resultBox.style.display = "block";
   }
 }
