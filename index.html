@@ -247,5 +247,18 @@
   html5QrcodeScanner.render(onScanSuccess);
 </script>
 
+<!-- Network Status Indicator Badge (Place inside your container/header) -->
+  <div id="network-status-container" class="mt-2 text-center">
+    <span id="queue-status-badge" class="badge bg-success px-3 py-2">
+      ✓ Online & Synced
+    </span>
+  </div>
+
+  <!-- Audio Feedback Elements -->
+  <audio id="scan-sound" src="assets/sounds/barcode_sound_effect_1.mp3" preload="auto"></audio>
+  <audio id="error-sound" src="assets/sounds/error_sound_effect.mp3" preload="auto"></audio>
+
+  <!-- JavaScript Files -->
+  <script src="js/script.js"> </script>
 </body>
 </html>
