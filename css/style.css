@@ -1,19 +1,18 @@
 /* ====================================================
-   1. BASE PAGE & BACKGROUND STYLES
+   1. BASE PAGE & GLOBAL TYPOGRAPHY
    ==================================================== */
-body /* Seminar Main Title Banner */
-#event-title {
-  font-family: 'Cinzel', serif !important;
-  font-weight: 700 !important;
-  letter-spacing: 1px !important;         
-  color: #000000 !important;              
-  text-transform: uppercase;              
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-image: url('../assets/background/coafacade.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+  min-height: 100vh;
 }
 
-/* Fixed Overlay to ensure dark slate tint renders above background image */
+/* Fixed Overlay for high contrast */
 body::before {
   content: "";
   position: fixed;
@@ -21,40 +20,45 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(15, 23, 42, 0.65); /* Soft dark slate overlay */
+  background: rgba(15, 23, 42, 0.65);
   pointer-events: none;
   z-index: 0;
 }
 
-/* Keep top-level layout containers above the overlay */
+/* Ensure layout stays above overlay */
 header, 
 .container-fluid {
   position: relative;
   z-index: 1;
 }
 
+/* Sub-headers and card titles (Montserrat) */
+h2, h3, h4, .scanner-instruction {
+  font-family: 'Montserrat', sans-serif;
+}
+
 /* ====================================================
-   2. TOP BANNER & CARD STYLING
+   2. MAIN SEMINAR HEADER (CINZEL & BLACK TEXT)
    ==================================================== */
-/* Seminar Main Title Banner */
 #event-title {
-  font-family: 'Montserrat', sans-serif !important;
-  font-weight: 800 !important;          /* Extra Bold */
-  letter-spacing: 0.5px !important;       /* Clean spacing between letters */
-  color: #0f172a !important;              /* Deep slate dark blue */
-  text-transform: uppercase;              /* Gives an official seminar look */
+  font-family: 'Cinzel', serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.5px !important;
+  color: #000000 !important;              /* Solid Black */
+  text-transform: uppercase;
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Container Maximum Width */
+/* ====================================================
+   3. CARD & CONTAINER STYLING
+   ==================================================== */
 .max-w-xl {
   max-width: 1100px;
   margin: 0 auto;
 }
 
-/* Scanner Card Container */
 .scanner-card {
   position: relative;
   overflow: hidden;
@@ -63,7 +67,7 @@ header,
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Background Watermark */
+/* Watermark */
 .scanner-card::before {
   content: "";
   position: absolute;
@@ -86,14 +90,14 @@ header,
   z-index: 1;
 }
 
-/* Vertical Border Between Columns on Desktop */
+/* Vertical Border on Desktop */
 @media (min-width: 768px) {
   .border-end-md {
     border-right: 1px solid #dee2e6 !important;
   }
 }
 
-/* Header Banner Logo */
+/* Banner Logo */
 .header-logo {
   max-width: 300px;
   width: 100%;
@@ -119,7 +123,7 @@ header,
 .digital-date {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #cbd5e1; /* Adjusted for better visibility against dark overlay */
+  color: #cbd5e1;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
