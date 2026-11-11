@@ -89,6 +89,7 @@ function sendScanToBackend(scanData) {
     .then(data => {
       if (data.status === "success") {
         playSuccess(data.message);
+        refreshAttendanceCount();
       } else {
         playError(data.message || "ID Not Found or Cooldown Active");
       }
@@ -158,6 +159,7 @@ async function syncOfflineQueue() {
     } else {
       playSuccess(`Synced ${synced} offline scan(s). ${skipped} skipped (duplicate or ID not found).`);
     }
+    refreshAttendanceCount();
   } catch (err) {
     console.error("Failed to sync offline queue:", err);
   } finally {
@@ -228,6 +230,25 @@ function updateNetworkUI() {
   }
 }
 
+// Updates the "Present today: X / Y" counter from the server
+async function refreshAttendanceCount() {
+  const presentEl = document.getElementById("counter-present");
+  const totalEl = document.getElementById("counter-total");
+  if (!presentEl || !totalEl || !navigator.onLine) return;
+
+  try {
+    const sep = SCRIPT_URL.includes("?") ? "&" : "?";
+    const res = await fetch(SCRIPT_URL + sep + "t=" + Date.now(), { redirect: "follow" });
+    const data = await res.json();
+    if (typeof data.present === "number" && typeof data.total === "number") {
+      presentEl.textContent = data.present;
+      totalEl.textContent = data.total;
+    }
+  } catch (err) {
+    console.warn("Could not refresh attendance counter:", err);
+  }
+}
+
 // ====================================================
 // INITIALIZE SCANNER ENGINE
 // ====================================================
@@ -237,6 +258,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // If scans were left in the queue (e.g. page was closed while offline), send them now
   syncOfflineQueue();
+
+  // Live counter: load once now, then refresh every 30 seconds
+  refreshAttendanceCount();
+  setInterval(refreshAttendanceCount, 30000);
 
   const html5QrcodeScanner = new Html5QrcodeScanner(
     "reader",
