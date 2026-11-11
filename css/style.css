@@ -86,31 +86,85 @@ h2, h3, h4, .scanner-instruction {
   height: auto;
 }
 
-/* Digital Clock */
-.digital-clock {
-  display: inline-block;
-  padding: 8px 20px;
-  color: #ffffff;
-  border: 2px solid #6c757d;
-  border-radius: 8px;
-  text-align: center;
-  font-family: 'Courier New', Courier, monospace, sans-serif;
-  font-size: 1.5rem;
-  font-weight: bold;
-  letter-spacing: 2px;
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+/* ====================================================
+   4. HIGHLIGHTED CLOCK & DATE PANEL
+   (Tip: change #0d6efd / #0b2e6b below to use your brand colors)
+   ==================================================== */
+.clock-panel {
+  position: relative;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0.75rem 1rem 0;
+  background: #ffffff;
+  border: 3px solid #0d6efd;
+  border-radius: 16px;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.12),
+              0 6px 18px rgba(13, 110, 253, 0.25);
+  overflow: hidden;
 }
 
-.digital-date {
-  font-size: 0.95rem;
+/* Time */
+.clock-panel .digital-clock {
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  letter-spacing: 2px;
+  line-height: 1.2;
+  color: #0b2e6b;
+  font-variant-numeric: tabular-nums;   /* keeps digits from jittering each second */
+}
+
+/* Date strip (edge to edge) */
+.clock-panel .digital-date {
+  margin: 0.6rem -1rem 0;
+  padding: 0.5rem 1rem;
+  background: #0d6efd;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
   font-weight: 600;
-  color: #cbd5e1;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-/* Camera Viewport */
+/* "LIVE" indicator */
+.clock-live {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #dc3545;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc3545;
+  animation: livePulse 1.2s infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+
+/* ====================================================
+   5. CAMERA VIEWPORT
+   ==================================================== */
 #reader {
   width: 100%;
   max-width: 440px;
