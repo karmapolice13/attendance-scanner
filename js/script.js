@@ -5,7 +5,8 @@ const SCRIPT_URL = urlParams.get('scriptUrl') || "https://script.google.com/macr
 // 2. Secret Security Token (Must match SECRET_API_KEY in Code.gs)
 const API_KEY = "COA_SEMINAR_2026_SECURE_TOKEN_9981";
 
-const QUEUE_STORAGE_KEY = "attendance_offline_queue";
+const DEPLOYMENT_ID = (SCRIPT_URL.split("/s/")[1] || SCRIPT_URL).split("/")[0];
+const QUEUE_STORAGE_KEY = "attendance_offline_queue_" + DEPLOYMENT_ID;
 
 // Local Audio Elements & Status Badge
 const successAudio = document.getElementById("scan-sound");
