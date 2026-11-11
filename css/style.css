@@ -163,6 +163,34 @@ h2, h3, h4, .scanner-instruction {
   background: #dc3545;
   animation: livePulse 1.2s infinite;
 }
+/* Live Attendance Counter */
+.attendance-counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.75rem;
+  max-width: 420px;
+  margin: 0 auto 1rem;
+  padding: 0.5rem 1rem;
+  background: #eaf2ff;
+  border: 2px solid #0d6efd;
+  border-radius: 12px;
+  font-family: 'Montserrat', sans-serif;
+  color: #0b2e6b;
+}
+
+.counter-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.counter-numbers {
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 
 @keyframes livePulse {
   0%, 100% { opacity: 1; }
