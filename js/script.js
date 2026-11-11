@@ -15,6 +15,9 @@ const queueBadge = document.getElementById("queue-status-badge");
 // Global timer variable for clearing results
 let resultDisplayTimeout = null;
 
+// Prevents two syncs from running at the same time
+let isSyncing = false;
+
 // Initialize Offline Queue on startup
 let offlineQueue = JSON.parse(localStorage.getItem(QUEUE_STORAGE_KEY) || "[]");
 
@@ -41,7 +44,7 @@ function onScanSuccess(decodedText, decodedResult) {
 
   const scanData = {
     id: scannedId,
-    timestamp: new Date().toISOString(),
+    timestamp: new Date().toISOString(), // Actual moment of the scan (kept even if synced later)
     userAgent: navigator.userAgent // Metadata for audit log
   };
 
@@ -61,16 +64,22 @@ function onScanError(errorMessage) {
   // Ignore continuous frame-scan errors
 }
 
+// Builds the request body so live scans and queued scans are sent identically
+function buildPayload(item) {
+  return JSON.stringify({
+    id: item.id,
+    apiKey: API_KEY,
+    userAgent: item.userAgent,
+    timestamp: item.timestamp // Server uses this as the real scan time
+  });
+}
+
 function sendScanToBackend(scanData) {
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({ 
-      id: scanData.id,
-      apiKey: API_KEY,
-      userAgent: scanData.userAgent
-    })
+    body: buildPayload(scanData)
   })
     .then(response => {
       if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
@@ -85,7 +94,6 @@ function sendScanToBackend(scanData) {
     })
     .catch(err => {
       console.warn("Network request failed. Saving scan to offline queue.", err);
-      playError("Connection Issue: Scan saved offline.");
       saveToOfflineQueue(scanData);
     });
 }
@@ -98,37 +106,63 @@ function saveToOfflineQueue(scanData) {
   updateNetworkUI();
 }
 
-function syncOfflineQueue() {
+// Sends queued scans one at a time, oldest first.
+// Each scan is removed from the queue only after the server has answered it,
+// so a dropped connection never loses or duplicates scans.
+async function syncOfflineQueue() {
   updateNetworkUI();
-  
-  if (!navigator.onLine || offlineQueue.length === 0) return;
 
-  const queueToSync = [...offlineQueue];
+  if (isSyncing || !navigator.onLine || offlineQueue.length === 0) return;
+  isSyncing = true;
 
-  Promise.all(
-    queueToSync.map(item =>
-      fetch(SCRIPT_URL, {
+  let synced = 0;
+  let skipped = 0;
+
+  try {
+    while (offlineQueue.length > 0) {
+      const item = offlineQueue[0];
+
+      const response = await fetch(SCRIPT_URL, {
         method: "POST",
         mode: "cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ 
-          id: item.id,
-          apiKey: API_KEY,
-          userAgent: item.userAgent
-        })
-      }).then(res => res.json())
-    )
-  )
-    .then(() => {
-      offlineQueue = [];
-      localStorage.removeItem(QUEUE_STORAGE_KEY);
-      playSuccess("All offline scans successfully synced!");
+        body: buildPayload(item)
+      });
+      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+      const result = await response.json();
+      const msg = result.message || "";
+
+      // Final answers: logged, already logged, or ID not in Masterlist.
+      // Anything else (bad key, missing sheet, server error) keeps the scan queued.
+      const isFinal =
+        result.status === "success" ||
+        msg.includes("Already Logged") ||
+        msg.includes("ID Not Found");
+      if (!isFinal) throw new Error(msg || "Unexpected server response");
+
+      if (result.status === "success") synced++; else skipped++;
+
+      offlineQueue.shift();
+      if (offlineQueue.length > 0) {
+        localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(offlineQueue));
+      } else {
+        localStorage.removeItem(QUEUE_STORAGE_KEY);
+      }
       updateNetworkUI();
-    })
-    .catch(err => {
-      console.error("Failed to sync offline queue:", err);
-      updateNetworkUI();
-    });
+    }
+
+    if (skipped === 0) {
+      playSuccess(`All offline scans successfully synced! (${synced})`);
+    } else {
+      playSuccess(`Synced ${synced} offline scan(s). ${skipped} skipped (duplicate or ID not found).`);
+    }
+  } catch (err) {
+    console.error("Failed to sync offline queue:", err);
+  } finally {
+    isSyncing = false;
+    updateNetworkUI();
+  }
 }
 
 // ====================================================
@@ -199,6 +233,9 @@ function updateNetworkUI() {
 
 document.addEventListener("DOMContentLoaded", () => {
   updateNetworkUI();
+
+  // If scans were left in the queue (e.g. page was closed while offline), send them now
+  syncOfflineQueue();
 
   const html5QrcodeScanner = new Html5QrcodeScanner(
     "reader",
