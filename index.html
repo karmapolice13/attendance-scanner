@@ -72,12 +72,19 @@
      <div id="digital-date" class="digital-date">Loading date...</div>
    </div>          
 
-<!-- Live Attendance Counter -->
-<div id="attendance-counter" class="attendance-counter">
-  <span class="counter-label">Present today</span>
-  <span class="counter-numbers"><span id="counter-present">–</span> / <span id="counter-total">–</span></span>
-</div>
-          
+<!-- LEFT COLUMN: Participant Results Display -->
+<div class="col-12 col-md-5 d-flex flex-column justify-content-center text-center border-end-md">
+  <h4 class="fw-bold text-secondary mb-3">Attendance Status</h4>
+
+  <!-- Live Attendance Counter -->
+  <div id="attendance-counter" class="attendance-counter">
+    <span class="counter-label">Present today</span>
+    <span class="counter-numbers"><span id="counter-present">–</span> / <span id="counter-total">–</span></span>
+  </div>
+
+  <!-- Idle / Default State Message -->
+  <div id="idle-notice" class="text-muted p-4 border rounded-3 bg-light"> 
+    
           <!-- Instruction Subtitle -->
           <p class="scanner-instruction text-muted lead mb-3 fs-6">
             Place the participant's QR code in front of the webcam
