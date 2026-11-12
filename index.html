@@ -101,6 +101,46 @@
     </div>
   </div>
 </div>
+
+<!-- Manual Check-in button (coordinator only) -->
+<div class="manual-footer">
+  <button id="manual-open-btn" type="button" class="btn btn-sm btn-outline-light manual-open-btn">
+    🔒 Manual check-in
+  </button>
+</div>
+
+<!-- Manual Check-in window -->
+<div id="manual-overlay" class="manual-overlay" hidden>
+  <div class="manual-modal" role="dialog" aria-modal="true" aria-labelledby="manual-title">
+    <button type="button" id="manual-close" class="manual-close" aria-label="Close">&times;</button>
+    <h5 id="manual-title">Manual Check-in</h5>
+
+    <!-- Step 1: Security code -->
+    <div id="manual-step-pin">
+      <p class="text-muted small mb-2">Enter the coordinator security code to continue.</p>
+      <input type="password" id="manual-pin" class="form-control form-control-lg" placeholder="Security code" autocomplete="off">
+      <div id="manual-pin-error" class="manual-error" role="alert"></div>
+      <button type="button" id="manual-unlock" class="btn btn-primary w-100">Unlock</button>
+    </div>
+
+    <!-- Step 2: Search participant -->
+    <div id="manual-step-search" hidden>
+      <input type="text" id="manual-search" class="form-control form-control-lg" placeholder="Search name, number or office..." autocomplete="off">
+      <div id="manual-results" class="manual-results"></div>
+    </div>
+
+    <!-- Step 3: Confirm -->
+    <div id="manual-step-confirm" hidden>
+      <p class="text-muted small mb-2">Check in this participant?</p>
+      <div id="manual-confirm-name" class="manual-confirm-name"></div>
+      <div id="manual-confirm-meta" class="manual-result-meta"></div>
+      <div class="d-flex gap-2 mt-4">
+        <button type="button" id="manual-back" class="btn btn-outline-secondary flex-fill">Back</button>
+        <button type="button" id="manual-confirm" class="btn btn-success flex-fill">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
     
 <!-- Audio Feedback Elements -->
 <audio id="scan-sound" src="assets/sounds/barcode_sound_effect_1.mp3" preload="auto"></audio>
