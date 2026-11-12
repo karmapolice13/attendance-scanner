@@ -212,7 +212,7 @@ function displayResultOnScreen(msg, textClass) {
     resultBox.style.display = "none";
     resultBox.innerHTML = "";
     if (idleNotice) idleNotice.style.display = "block";
-  }, 4000);
+  }, 6000);
 }
 
 function updateNetworkUI() {
