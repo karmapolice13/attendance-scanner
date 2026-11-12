@@ -31,8 +31,8 @@ window.addEventListener("offline", updateNetworkUI);
 // ====================================================
 
 function onScanSuccess(decodedText, decodedResult) {
-  // Cooldown Lock: Prevent rapid double-scans
-  if (window.isProcessingScan) return;
+  // Cooldown Lock: Prevent rapid double-scans (also paused while the Manual Check-in window is open)
+  if (window.isProcessingScan || manualOpen) return;
   window.isProcessingScan = true;
 
   // Clean raw scanned text (supports raw IDs and URLs containing ?id=)
@@ -250,6 +250,262 @@ async function refreshAttendanceCount() {
 }
 
 // ====================================================
+// MANUAL CHECK-IN (coordinator only)
+// ====================================================
+// The security code is verified by the server (Code.gs). The participant list is only
+// sent after the correct code is entered, and nothing is stored in the browser.
+
+const MANUAL_AUTO_LOCK_MS = 5 * 60 * 1000; // re-lock after 5 minutes without use
+
+let manualOpen = false;       // true while the manual check-in window is showing
+let manualPin = null;         // kept in memory only
+let manualParticipants = [];
+let manualSelected = null;
+let manualLockTimer = null;
+let manualBusy = false;
+
+function manualEl(id) {
+  return document.getElementById(id);
+}
+
+// Sends a request to the backend with the API key and device info attached
+async function postToBackend(payload) {
+  const response = await fetch(SCRIPT_URL, {
+    method: "POST",
+    mode: "cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ apiKey: API_KEY, userAgent: navigator.userAgent, ...payload })
+  });
+  if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+  return response.json();
+}
+
+function manualShowStep(step) {
+  ["pin", "search", "confirm"].forEach(name => {
+    manualEl("manual-step-" + name).hidden = (name !== step);
+  });
+}
+
+function resetManualLockTimer() {
+  clearTimeout(manualLockTimer);
+  manualLockTimer = setTimeout(lockManual, MANUAL_AUTO_LOCK_MS);
+}
+
+// Forget the code and the participant list; the next opening asks for the code again
+function lockManual() {
+  clearTimeout(manualLockTimer);
+  manualPin = null;
+  manualParticipants = [];
+  manualSelected = null;
+  if (manualOpen) showManualPinStep();
+}
+
+function showManualPinStep() {
+  manualShowStep("pin");
+  manualEl("manual-pin").value = "";
+  manualEl("manual-pin-error").textContent = "";
+  setTimeout(() => manualEl("manual-pin").focus(), 50);
+}
+
+function goToManualSearch() {
+  manualSelected = null;
+  manualShowStep("search");
+  manualEl("manual-search").value = "";
+  renderManualResults("");
+  resetManualLockTimer();
+  setTimeout(() => manualEl("manual-search").focus(), 50);
+}
+
+function openManualModal() {
+  if (!navigator.onLine) {
+    playError("Manual check-in needs an internet connection.");
+    return;
+  }
+  manualOpen = true;
+  manualEl("manual-overlay").hidden = false;
+
+  if (manualPin && manualParticipants.length > 0) {
+    goToManualSearch();       // still unlocked from a recent use
+  } else {
+    showManualPinStep();
+  }
+}
+
+function closeManualModal() {
+  manualOpen = false;
+  manualEl("manual-overlay").hidden = true;
+}
+
+async function unlockManual() {
+  if (manualBusy) return;
+
+  const pin = manualEl("manual-pin").value.trim();
+  const errorEl = manualEl("manual-pin-error");
+  const unlockBtn = manualEl("manual-unlock");
+
+  if (!pin) {
+    errorEl.textContent = "Please enter the security code.";
+    return;
+  }
+
+  manualBusy = true;
+  unlockBtn.disabled = true;
+  unlockBtn.textContent = "Checking...";
+  errorEl.textContent = "";
+
+  try {
+    const result = await postToBackend({ action: "listParticipants", pin: pin });
+    if (result.status === "success") {
+      manualPin = pin;
+      manualParticipants = result.participants || [];
+      goToManualSearch();
+    } else {
+      errorEl.textContent = result.message || "Incorrect security code.";
+      manualEl("manual-pin").select();
+    }
+  } catch (err) {
+    console.warn("Manual unlock failed:", err);
+    errorEl.textContent = "Connection problem. Please try again.";
+  } finally {
+    manualBusy = false;
+    unlockBtn.disabled = false;
+    unlockBtn.textContent = "Unlock";
+  }
+}
+
+// Shows up to 8 participants matching ALL typed words (name, number or office, any order)
+function renderManualResults(query) {
+  const box = manualEl("manual-results");
+  box.innerHTML = "";
+
+  const addHint = text => {
+    const hint = document.createElement("div");
+    hint.className = "manual-hint";
+    hint.textContent = text;
+    box.appendChild(hint);
+  };
+
+  const tokens = query.toLowerCase().replace(/[.,]/g, " ").split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) {
+    addHint("Type a name, participant number or office.");
+    return;
+  }
+
+  const matches = manualParticipants.filter(p => {
+    const haystack = `${p.name} ${p.id} ${p.office}`.toLowerCase();
+    return tokens.every(t => haystack.includes(t));
+  });
+
+  if (matches.length === 0) {
+    addHint("No match found. Check the spelling or try the surname only.");
+    return;
+  }
+
+  matches.slice(0, 8).forEach(p => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "manual-result";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "manual-result-name";
+    nameEl.textContent = p.name;
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "manual-result-meta";
+    metaEl.textContent = "No. " + p.id + (p.office ? "  •  " + p.office : "");
+
+    btn.append(nameEl, metaEl);
+    btn.addEventListener("click", () => selectManualParticipant(p));
+    box.appendChild(btn);
+  });
+
+  if (matches.length > 8) {
+    addHint(`Showing 8 of ${matches.length}. Keep typing to narrow the list.`);
+  }
+}
+
+function selectManualParticipant(p) {
+  manualSelected = p;
+  manualEl("manual-confirm-name").textContent = p.name;
+  manualEl("manual-confirm-meta").textContent = "No. " + p.id + (p.office ? "  •  " + p.office : "");
+  manualShowStep("confirm");
+  resetManualLockTimer();
+}
+
+async function confirmManual() {
+  if (manualBusy || !manualSelected) return;
+
+  if (!navigator.onLine) {
+    closeManualModal();
+    playError("Manual check-in needs an internet connection.");
+    return;
+  }
+
+  const confirmBtn = manualEl("manual-confirm");
+  manualBusy = true;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Checking in...";
+
+  try {
+    const result = await postToBackend({
+      action: "manualCheckIn",
+      pin: manualPin,
+      id: manualSelected.id,
+      timestamp: new Date().toISOString()
+    });
+
+    if (result.status === "success") {
+      closeManualModal();
+      playSuccess(result.message);
+      refreshAttendanceCount();
+    } else if (result.code === "PIN") {
+      // The code stopped being valid (changed or locked out): ask for it again
+      lockManual();
+      manualEl("manual-pin-error").textContent = result.message || "Incorrect security code.";
+    } else {
+      closeManualModal();
+      playError(result.message || "Could not check in this participant.");
+    }
+  } catch (err) {
+    console.warn("Manual check-in failed:", err);
+    closeManualModal();
+    playError("Connection problem. Manual check-in was not saved. Please try again.");
+  } finally {
+    manualBusy = false;
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = "Confirm";
+    resetManualLockTimer();
+  }
+}
+
+function initManualCheckin() {
+  const openBtn = manualEl("manual-open-btn");
+  if (!openBtn) return; // page without the manual check-in markup
+
+  openBtn.addEventListener("click", openManualModal);
+  manualEl("manual-close").addEventListener("click", closeManualModal);
+  manualEl("manual-overlay").addEventListener("click", e => {
+    if (e.target.id === "manual-overlay") closeManualModal();
+  });
+  manualEl("manual-unlock").addEventListener("click", unlockManual);
+  manualEl("manual-pin").addEventListener("keydown", e => {
+    if (e.key === "Enter") unlockManual();
+  });
+  manualEl("manual-search").addEventListener("input", e => {
+    resetManualLockTimer();
+    renderManualResults(e.target.value);
+  });
+  manualEl("manual-back").addEventListener("click", () => {
+    manualShowStep("search");
+    setTimeout(() => manualEl("manual-search").focus(), 50);
+  });
+  manualEl("manual-confirm").addEventListener("click", confirmManual);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && manualOpen) closeManualModal();
+  });
+}
+
+// ====================================================
 // INITIALIZE SCANNER ENGINE
 // ====================================================
 
@@ -258,6 +514,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // If scans were left in the queue (e.g. page was closed while offline), send them now
   syncOfflineQueue();
+
+  // Manual check-in button & window
+  initManualCheckin();
 
   // Live counter: load once now, then refresh every 30 seconds
   refreshAttendanceCount();
