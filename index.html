@@ -81,7 +81,7 @@
 
           <!-- Instruction Subtitle -->
           <p class="scanner-instruction text-muted lead mb-3 fs-6">
-            Place the Participant's QR code in front of the camera
+            Place the participant's QR code in front of the webcam
           </p>
 
           <!-- Camera Viewport -->
@@ -127,6 +127,51 @@
     <div id="manual-step-search" hidden>
       <input type="text" id="manual-search" class="form-control form-control-lg" placeholder="Search name, number or office..." autocomplete="off">
       <div id="manual-results" class="manual-results"></div>
+      <div class="d-flex gap-2 mt-3">
+        <button type="button" id="manual-walkin-btn" class="btn btn-sm btn-outline-primary flex-fill">+ Walk-in participant</button>
+        <button type="button" id="manual-void-btn" class="btn btn-sm btn-outline-danger flex-fill">Void a wrong scan</button>
+      </div>
+      <button type="button" id="manual-mode-back" class="btn btn-sm btn-link w-100 mt-1" hidden>&larr; Back to check-in</button>
+    </div>
+
+    <!-- Walk-in: a participant who is not in the Masterlist -->
+    <div id="manual-step-walkin" hidden>
+      <p class="text-muted small mb-2">Add a participant who is not in the Masterlist. They are added with the next number and checked in now. Write everything in full, no abbreviations.</p>
+      <div class="row g-2">
+        <div class="col-12"><input type="text" id="wi-surname" class="form-control" placeholder="Surname *" autocomplete="off"></div>
+        <div class="col-12"><input type="text" id="wi-first" class="form-control" placeholder="First name *" autocomplete="off"></div>
+        <div class="col-6"><input type="text" id="wi-mi" class="form-control" placeholder="Middle initial" maxlength="3" autocomplete="off"></div>
+        <div class="col-6"><input type="text" id="wi-suffix" class="form-control" placeholder="Suffix (Jr., III)" maxlength="10" autocomplete="off"></div>
+        <div class="col-12"><input type="text" id="wi-position" class="form-control" placeholder="Position / designation *" autocomplete="off"></div>
+        <div class="col-12"><input type="text" id="wi-office" class="form-control" placeholder="Office / agency *" autocomplete="off"></div>
+        <div class="col-12"><input type="email" id="wi-email" class="form-control" placeholder="Email (optional)" autocomplete="off"></div>
+      </div>
+      <div id="wi-error" class="manual-error" role="alert"></div>
+      <div class="d-flex gap-2 mt-3">
+        <button type="button" id="wi-back" class="btn btn-outline-secondary flex-fill">Back</button>
+        <button type="button" id="wi-save" class="btn btn-success flex-fill">Add &amp; check in</button>
+      </div>
+    </div>
+
+    <!-- Void: choose which scan to cancel -->
+    <div id="manual-step-voidlist" hidden>
+      <div id="void-name" class="manual-confirm-name"></div>
+      <p class="text-muted small mb-2">Choose the wrong scan to void.</p>
+      <div id="void-scans" class="manual-results"></div>
+      <button type="button" id="void-list-back" class="btn btn-outline-secondary w-100 mt-2">Back</button>
+    </div>
+
+    <!-- Void: confirm -->
+    <div id="manual-step-voidconfirm" hidden>
+      <p class="text-muted small mb-2">Void this scan? It stays in the log (struck through) but no longer counts.</p>
+      <div id="void-confirm-name" class="manual-confirm-name"></div>
+      <div id="void-confirm-meta" class="manual-result-meta"></div>
+      <input type="text" id="void-reason" class="form-control mt-3" placeholder="Reason (optional), e.g. scanned the wrong QR code" maxlength="200" autocomplete="off">
+      <div id="void-error" class="manual-error" role="alert"></div>
+      <div class="d-flex gap-2 mt-3">
+        <button type="button" id="void-back" class="btn btn-outline-secondary flex-fill">Back</button>
+        <button type="button" id="void-confirm" class="btn btn-danger flex-fill">Void scan</button>
+      </div>
     </div>
 
     <!-- Step 3: Confirm -->
