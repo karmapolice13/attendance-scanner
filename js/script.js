@@ -494,7 +494,7 @@ async function confirmManual() {
 
 // ---- Walk-in participant (not in the Masterlist)
 function openWalkInForm() {
-  ["wi-surname", "wi-first", "wi-mi", "wi-suffix", "wi-position", "wi-office", "wi-email"].forEach(id => { manualEl(id).value = ""; });
+  ["wi-surname", "wi-first", "wi-mi", "wi-suffix", "wi-sex", "wi-position", "wi-office", "wi-email"].forEach(id => { manualEl(id).value = ""; });
   manualEl("wi-error").textContent = "";
   manualShowStep("walkin");
   resetManualLockTimer();
@@ -506,6 +506,7 @@ async function saveWalkIn() {
   const val = id => manualEl(id).value.trim();
   const errorEl = manualEl("wi-error");
   if (!val("wi-surname") || !val("wi-first")) { errorEl.textContent = "Please type the surname and first name."; return; }
+  if (!val("wi-sex")) { errorEl.textContent = "Please choose the sex (Male or Female)."; return; }
   if (!val("wi-position")) { errorEl.textContent = "Please type the position / designation."; return; }
   if (!val("wi-office")) { errorEl.textContent = "Please type the office / agency."; return; }
   if (!navigator.onLine) { errorEl.textContent = "Adding a walk-in needs an internet connection."; return; }
@@ -516,7 +517,7 @@ async function saveWalkIn() {
   try {
     const result = await postToBackend({
       action: "addWalkIn", pin: manualPin,
-      surname: val("wi-surname"), firstName: val("wi-first"), middleInitial: val("wi-mi"), suffix: val("wi-suffix"),
+      surname: val("wi-surname"), firstName: val("wi-first"), middleInitial: val("wi-mi"), suffix: val("wi-suffix"), sex: val("wi-sex"),
       position: val("wi-position"), office: val("wi-office"), email: val("wi-email"),
       timestamp: new Date().toISOString()
     });
