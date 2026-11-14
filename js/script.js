@@ -212,7 +212,7 @@ function displayResultOnScreen(msg, textClass) {
     resultBox.style.display = "none";
     resultBox.innerHTML = "";
     if (idleNotice) idleNotice.style.display = "block";
-  }, 6000);
+  }, 4000);
 }
 
 function updateNetworkUI() {
@@ -263,6 +263,8 @@ let manualParticipants = [];
 let manualSelected = null;
 let manualLockTimer = null;
 let manualBusy = false;
+let manualMode = "checkin";   // "checkin" or "void"
+let voidSelected = null;      // the scan chosen for voiding
 
 function manualEl(id) {
   return document.getElementById(id);
@@ -281,7 +283,7 @@ async function postToBackend(payload) {
 }
 
 function manualShowStep(step) {
-  ["pin", "search", "confirm"].forEach(name => {
+  ["pin", "search", "confirm", "walkin", "voidlist", "voidconfirm"].forEach(name => {
     manualEl("manual-step-" + name).hidden = (name !== step);
   });
 }
@@ -307,6 +309,16 @@ function showManualPinStep() {
   setTimeout(() => manualEl("manual-pin").focus(), 50);
 }
 
+function setManualMode(mode) {
+  manualMode = mode;
+  const isVoid = mode === "void";
+  manualEl("manual-title").textContent = isVoid ? "Void a wrong scan" : "Manual Check-in";
+  manualEl("manual-search").placeholder = isVoid ? "Search the participant whose scan is wrong..." : "Search name, number or office...";
+  manualEl("manual-walkin-btn").hidden = isVoid;
+  manualEl("manual-void-btn").hidden = isVoid;
+  manualEl("manual-mode-back").hidden = !isVoid;
+}
+
 function goToManualSearch() {
   manualSelected = null;
   manualShowStep("search");
@@ -323,6 +335,7 @@ function openManualModal() {
   }
   manualOpen = true;
   manualEl("manual-overlay").hidden = false;
+  setManualMode("checkin");
 
   if (manualPin && manualParticipants.length > 0) {
     goToManualSearch();       // still unlocked from a recent use
@@ -425,6 +438,7 @@ function renderManualResults(query) {
 }
 
 function selectManualParticipant(p) {
+  if (manualMode === "void") { loadVoidScans(p); return; }
   manualSelected = p;
   manualEl("manual-confirm-name").textContent = p.name;
   manualEl("manual-confirm-meta").textContent = "No. " + p.id + (p.office ? "  •  " + p.office : "");
@@ -478,6 +492,130 @@ async function confirmManual() {
   }
 }
 
+// ---- Walk-in participant (not in the Masterlist)
+function openWalkInForm() {
+  ["wi-surname", "wi-first", "wi-mi", "wi-suffix", "wi-position", "wi-office", "wi-email"].forEach(id => { manualEl(id).value = ""; });
+  manualEl("wi-error").textContent = "";
+  manualShowStep("walkin");
+  resetManualLockTimer();
+  setTimeout(() => manualEl("wi-surname").focus(), 50);
+}
+
+async function saveWalkIn() {
+  if (manualBusy) return;
+  const val = id => manualEl(id).value.trim();
+  const errorEl = manualEl("wi-error");
+  if (!val("wi-surname") || !val("wi-first")) { errorEl.textContent = "Please type the surname and first name."; return; }
+  if (!val("wi-position")) { errorEl.textContent = "Please type the position / designation."; return; }
+  if (!val("wi-office")) { errorEl.textContent = "Please type the office / agency."; return; }
+  if (!navigator.onLine) { errorEl.textContent = "Adding a walk-in needs an internet connection."; return; }
+
+  const btn = manualEl("wi-save");
+  manualBusy = true; btn.disabled = true; btn.textContent = "Saving...";
+  errorEl.textContent = "";
+  try {
+    const result = await postToBackend({
+      action: "addWalkIn", pin: manualPin,
+      surname: val("wi-surname"), firstName: val("wi-first"), middleInitial: val("wi-mi"), suffix: val("wi-suffix"),
+      position: val("wi-position"), office: val("wi-office"), email: val("wi-email"),
+      timestamp: new Date().toISOString()
+    });
+    if (result.status === "success") {
+      if (result.participant) manualParticipants.push(result.participant);
+      closeManualModal();
+      playSuccess(result.message);
+      refreshAttendanceCount();
+    } else if (result.code === "PIN") {
+      lockManual();
+      manualEl("manual-pin-error").textContent = result.message || "Incorrect security code.";
+    } else {
+      errorEl.innerHTML = result.message || "Could not add this participant.";
+    }
+  } catch (err) {
+    console.warn("Walk-in failed:", err);
+    errorEl.textContent = "Connection problem. Nothing was saved. Please try again.";
+  } finally {
+    manualBusy = false; btn.disabled = false; btn.textContent = "Add & check in";
+    resetManualLockTimer();
+  }
+}
+
+// ---- Void a wrong scan
+async function loadVoidScans(p) {
+  if (manualBusy) return;
+  manualBusy = true;
+  const box = manualEl("void-scans");
+  box.innerHTML = "";
+  manualEl("void-name").textContent = p.name + "  (No. " + p.id + ")";
+  manualShowStep("voidlist");
+  const hint = text => { const d = document.createElement("div"); d.className = "manual-hint"; d.textContent = text; box.appendChild(d); };
+  hint("Loading scans...");
+  try {
+    const result = await postToBackend({ action: "listScans", pin: manualPin, id: p.id });
+    box.innerHTML = "";
+    if (result.status === "success") {
+      if (!result.scans || result.scans.length === 0) { hint("This participant has no active scans."); }
+      (result.scans || []).forEach(sc => {
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "manual-result";
+        const nameEl = document.createElement("div"); nameEl.className = "manual-result-name"; nameEl.textContent = sc.label;
+        const metaEl = document.createElement("div"); metaEl.className = "manual-result-meta"; metaEl.textContent = sc.method || "";
+        btn.append(nameEl, metaEl);
+        btn.addEventListener("click", () => { voidSelected = { person: p, scan: sc }; showVoidConfirm(); });
+        box.appendChild(btn);
+      });
+    } else if (result.code === "PIN") {
+      lockManual();
+      manualEl("manual-pin-error").textContent = result.message || "Incorrect security code.";
+    } else {
+      hint(result.message || "Could not load the scans.");
+    }
+  } catch (err) {
+    box.innerHTML = "";
+    hint("Connection problem. Please go back and try again.");
+  } finally {
+    manualBusy = false;
+    resetManualLockTimer();
+  }
+}
+
+function showVoidConfirm() {
+  manualEl("void-confirm-name").textContent = voidSelected.person.name;
+  manualEl("void-confirm-meta").textContent = "No. " + voidSelected.person.id + "  •  " + voidSelected.scan.label;
+  manualEl("void-reason").value = "";
+  manualEl("void-error").textContent = "";
+  manualShowStep("voidconfirm");
+  resetManualLockTimer();
+}
+
+async function confirmVoid() {
+  if (manualBusy || !voidSelected) return;
+  if (!navigator.onLine) { manualEl("void-error").textContent = "Voiding needs an internet connection."; return; }
+  const btn = manualEl("void-confirm");
+  manualBusy = true; btn.disabled = true; btn.textContent = "Voiding...";
+  try {
+    const result = await postToBackend({
+      action: "voidScan", pin: manualPin, id: voidSelected.person.id,
+      row: voidSelected.scan.row, stamp: voidSelected.scan.stamp, reason: manualEl("void-reason").value.trim()
+    });
+    if (result.status === "success") {
+      closeManualModal();
+      playSuccess(result.message);
+      refreshAttendanceCount();
+    } else if (result.code === "PIN") {
+      lockManual();
+      manualEl("manual-pin-error").textContent = result.message || "Incorrect security code.";
+    } else {
+      manualEl("void-error").textContent = (result.message || "Could not void this scan.").replace(/<[^>]*>/g, " ");
+    }
+  } catch (err) {
+    manualEl("void-error").textContent = "Connection problem. The scan was not voided. Please try again.";
+  } finally {
+    manualBusy = false; btn.disabled = false; btn.textContent = "Void scan";
+    resetManualLockTimer();
+  }
+}
+
 function initManualCheckin() {
   const openBtn = manualEl("manual-open-btn");
   if (!openBtn) return; // page without the manual check-in markup
@@ -500,6 +638,14 @@ function initManualCheckin() {
     setTimeout(() => manualEl("manual-search").focus(), 50);
   });
   manualEl("manual-confirm").addEventListener("click", confirmManual);
+  manualEl("manual-walkin-btn").addEventListener("click", openWalkInForm);
+  manualEl("manual-void-btn").addEventListener("click", () => { setManualMode("void"); goToManualSearch(); });
+  manualEl("manual-mode-back").addEventListener("click", () => { setManualMode("checkin"); goToManualSearch(); });
+  manualEl("wi-back").addEventListener("click", goToManualSearch);
+  manualEl("wi-save").addEventListener("click", saveWalkIn);
+  manualEl("void-list-back").addEventListener("click", goToManualSearch);
+  manualEl("void-back").addEventListener("click", () => manualShowStep("voidlist"));
+  manualEl("void-confirm").addEventListener("click", confirmVoid);
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && manualOpen) closeManualModal();
   });
