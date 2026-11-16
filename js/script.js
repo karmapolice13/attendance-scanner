@@ -1,6 +1,6 @@
 // 1. Dynamic Script URL from ?scriptUrl= parameter with fallback
 const urlParams = new URLSearchParams(window.location.search);
-const SCRIPT_URL = urlParams.get('scriptUrl') || "https://script.google.com/macros/s/AKfycbxCO3nqijuCoC3Cw-Oi9VMMWDSXnPZkCqYlRv_mhJ3AJr5_YKYPZBJ5IpUNeQO2souPfw/exec";
+const SCRIPT_URL = urlParams.get('scriptUrl') || "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
 
 // 2. Secret Security Token (Must match SECRET_API_KEY in Code.gs)
 const API_KEY = "COA_SEMINAR_2026_SECURE_TOKEN_9981";
@@ -494,7 +494,7 @@ async function confirmManual() {
 
 // ---- Walk-in participant (not in the Masterlist)
 function openWalkInForm() {
-  ["wi-surname", "wi-first", "wi-mi", "wi-suffix", "wi-sex", "wi-position", "wi-office", "wi-email"].forEach(id => { manualEl(id).value = ""; });
+  ["wi-surname", "wi-first", "wi-mi", "wi-suffix", "wi-sex", "wi-position", "wi-office", "wi-rank", "wi-service", "wi-email"].forEach(id => { manualEl(id).value = ""; });
   manualEl("wi-error").textContent = "";
   manualShowStep("walkin");
   resetManualLockTimer();
@@ -509,6 +509,7 @@ async function saveWalkIn() {
   if (!val("wi-sex")) { errorEl.textContent = "Please choose the sex (Male or Female)."; return; }
   if (!val("wi-position")) { errorEl.textContent = "Please type the position / designation."; return; }
   if (!val("wi-office")) { errorEl.textContent = "Please type the office / agency."; return; }
+  if (val("wi-service") && !val("wi-rank")) { errorEl.textContent = "Please type the rank too, or clear the service (rank and service are for uniformed personnel only)."; return; }
   if (!navigator.onLine) { errorEl.textContent = "Adding a walk-in needs an internet connection."; return; }
 
   const btn = manualEl("wi-save");
@@ -518,7 +519,7 @@ async function saveWalkIn() {
     const result = await postToBackend({
       action: "addWalkIn", pin: manualPin,
       surname: val("wi-surname"), firstName: val("wi-first"), middleInitial: val("wi-mi"), suffix: val("wi-suffix"), sex: val("wi-sex"),
-      position: val("wi-position"), office: val("wi-office"), email: val("wi-email"),
+      position: val("wi-position"), office: val("wi-office"), rank: val("wi-rank"), service: val("wi-service"), email: val("wi-email"),
       timestamp: new Date().toISOString()
     });
     if (result.status === "success") {
