@@ -1,6 +1,6 @@
 // 1. Dynamic Script URL from ?scriptUrl= parameter with fallback
 const urlParams = new URLSearchParams(window.location.search);
-const SCRIPT_URL = urlParams.get('scriptUrl') || "https://script.google.com/macros/s/AKfycbyCprd2xbGdpQ7zM2ueI-FTJ0ZpQumiEDCaOW0rSja7M4hj3GVmMdNLwBdItIr9o6rxOA/exec";
+const SCRIPT_URL = urlParams.get('scriptUrl') || "https://script.google.com/macros/s/AKfycbxCO3nqijuCoC3Cw-Oi9VMMWDSXnPZkCqYlRv_mhJ3AJr5_YKYPZBJ5IpUNeQO2souPfw/exec";
 
 // 2. Secret Security Token (Must match SECRET_API_KEY in Code.gs)
 const API_KEY = "COA_SEMINAR_2026_SECURE_TOKEN_9981";
