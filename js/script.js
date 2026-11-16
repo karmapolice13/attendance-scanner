@@ -509,6 +509,7 @@ async function saveWalkIn() {
   if (!val("wi-sex")) { errorEl.textContent = "Please choose the sex (Male or Female)."; return; }
   if (!val("wi-position")) { errorEl.textContent = "Please type the position / designation."; return; }
   if (!val("wi-office")) { errorEl.textContent = "Please type the office / agency."; return; }
+  if (!val("wi-email")) { errorEl.textContent = "Please type the email address."; return; }
   if (val("wi-service") && !val("wi-rank")) { errorEl.textContent = "Please type the rank too, or clear the service (rank and service are for uniformed personnel only)."; return; }
   if (!navigator.onLine) { errorEl.textContent = "Adding a walk-in needs an internet connection."; return; }
 
