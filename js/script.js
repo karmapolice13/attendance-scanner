@@ -283,7 +283,7 @@ async function postToBackend(payload) {
 }
 
 function manualShowStep(step) {
-  ["pin", "search", "confirm", "walkin", "voidlist", "voidconfirm"].forEach(name => {
+  ["pin", "search", "confirm", "walkin", "voidlist", "voidconfirm", "status"].forEach(name => {
     manualEl("manual-step-" + name).hidden = (name !== step);
   });
 }
@@ -311,12 +311,13 @@ function showManualPinStep() {
 
 function setManualMode(mode) {
   manualMode = mode;
-  const isVoid = mode === "void";
-  manualEl("manual-title").textContent = isVoid ? "Void a wrong scan" : "Manual Check-in";
-  manualEl("manual-search").placeholder = isVoid ? "Search the participant whose scan is wrong..." : "Search name, number or office...";
-  manualEl("manual-walkin-btn").hidden = isVoid;
-  manualEl("manual-void-btn").hidden = isVoid;
-  manualEl("manual-mode-back").hidden = !isVoid;
+  const isVoid = mode === "void", isStatus = mode === "status", special = isVoid || isStatus;
+  manualEl("manual-title").textContent = isVoid ? "Void a wrong scan" : (isStatus ? "Logs of Today" : "Manual Check-in");
+  manualEl("manual-search").placeholder = isVoid ? "Search the participant whose scan is wrong..." : (isStatus ? "Search the participant to check..." : "Search name, number or office...");
+  manualEl("manual-walkin-btn").hidden = special;
+  manualEl("manual-void-btn").hidden = special;
+  manualEl("manual-status-btn").hidden = special;
+  manualEl("manual-mode-back").hidden = !special;
 }
 
 function goToManualSearch() {
@@ -336,6 +337,7 @@ function openManualModal() {
   manualOpen = true;
   manualEl("manual-overlay").hidden = false;
   setManualMode("checkin");
+  if (!manualPin) postToBackend({ action: "ping" }).catch(() => {});   // wakes the script while the code is being typed, so checking it is quick
 
   if (manualPin && manualParticipants.length > 0) {
     goToManualSearch();       // still unlocked from a recent use
@@ -364,6 +366,7 @@ async function unlockManual() {
   manualBusy = true;
   unlockBtn.disabled = true;
   unlockBtn.textContent = "Checking...";
+  errorEl.textContent = "";
   errorEl.textContent = "";
 
   try {
@@ -439,6 +442,7 @@ function renderManualResults(query) {
 
 function selectManualParticipant(p) {
   if (manualMode === "void") { loadVoidScans(p); return; }
+  if (manualMode === "status") { loadDayStatus(p); return; }
   manualSelected = p;
   manualEl("manual-confirm-name").textContent = p.name;
   manualEl("manual-confirm-meta").textContent = "No. " + p.id + (p.office ? "  •  " + p.office : "");
@@ -543,6 +547,46 @@ async function saveWalkIn() {
   }
 }
 
+// ---- Logs of today: what a participant has already logged (read only)
+async function loadDayStatus(p) {
+  if (manualBusy) return;
+  manualBusy = true;
+  const box = manualEl("status-rows");
+  box.innerHTML = "";
+  manualEl("status-name").textContent = p.name + "  (No. " + p.id + ")";
+  manualEl("status-date").textContent = "";
+  manualShowStep("status");
+  const hint = text => { const d = document.createElement("div"); d.className = "manual-hint"; d.textContent = text; box.appendChild(d); };
+  hint("Loading...");
+  try {
+    const result = await postToBackend({ action: "dayStatus", pin: manualPin, id: p.id });
+    box.innerHTML = "";
+    if (result.status === "success") {
+      manualEl("status-date").textContent = result.day.date;
+      result.day.slots.forEach(sl => {
+        const row = document.createElement("div");
+        row.className = "manual-result status-row " + (sl.time ? "status-done" : "status-none");
+        const label = document.createElement("div"); label.className = "manual-result-name"; label.textContent = sl.label;
+        const meta = document.createElement("div"); meta.className = "manual-result-meta";
+        meta.textContent = sl.time ? "\u2714 Logged at " + sl.time : "Not logged yet";
+        row.append(label, meta);
+        box.appendChild(row);
+      });
+    } else if (result.code === "PIN") {
+      lockManual();
+      manualEl("manual-pin-error").textContent = result.message || "Incorrect security code.";
+    } else {
+      hint((result.message || "Could not load the logs.").replace(/<[^>]*>/g, " "));
+    }
+  } catch (err) {
+    box.innerHTML = "";
+    hint("Connection problem. Please go back and try again.");
+  } finally {
+    manualBusy = false;
+    resetManualLockTimer();
+  }
+}
+
 // ---- Void a wrong scan
 async function loadVoidScans(p) {
   if (manualBusy) return;
@@ -643,6 +687,8 @@ function initManualCheckin() {
   manualEl("manual-confirm").addEventListener("click", confirmManual);
   manualEl("manual-walkin-btn").addEventListener("click", openWalkInForm);
   manualEl("manual-void-btn").addEventListener("click", () => { setManualMode("void"); goToManualSearch(); });
+  manualEl("manual-status-btn").addEventListener("click", () => { setManualMode("status"); goToManualSearch(); });
+  manualEl("status-back").addEventListener("click", goToManualSearch);
   manualEl("manual-mode-back").addEventListener("click", () => { setManualMode("checkin"); goToManualSearch(); });
   manualEl("wi-back").addEventListener("click", goToManualSearch);
   manualEl("wi-save").addEventListener("click", saveWalkIn);
