@@ -257,6 +257,7 @@
       fetch(fetchUrl, { redirect: "follow" })
         .then(response => response.json())
         .then(data => {
+          if (typeof applyScannerTheme === "function") applyScannerTheme(data.theme);
           if (data.title && data.title !== "") {
             if (eventTitleElement) eventTitleElement.innerText = data.title;
             document.title = data.title;
