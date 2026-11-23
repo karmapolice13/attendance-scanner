@@ -240,6 +240,7 @@ async function refreshAttendanceCount() {
     const sep = SCRIPT_URL.includes("?") ? "&" : "?";
     const res = await fetch(SCRIPT_URL + sep + "t=" + Date.now(), { redirect: "follow" });
     const data = await res.json();
+    if (typeof applyScannerTheme === "function" && "theme" in data) applyScannerTheme(data.theme);
     if (typeof data.present === "number" && typeof data.total === "number") {
       presentEl.textContent = data.present;
       totalEl.textContent = data.total;
@@ -728,3 +729,40 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   html5QrcodeScanner.render(onScanSuccess, onScanError);
 });
+
+
+// ====================================================
+// OPTIONAL LOOK (colors and fonts) chosen by the coordinator in the Coordinator Console
+// The sheet sends a "theme" with the title. Only colors and fonts change: the layout and the sizes stay as they are.
+// Everything received is checked here (hex colors and a fixed list of fonts) before it is used.
+// ====================================================
+const THEME_TITLE_FONTS = ["Cinzel", "Montserrat", "Playfair Display", "Poppins", "Roboto Slab", "Merriweather", "Oswald", "Lato"];
+const THEME_TEXT_FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Poppins", "Nunito", "Montserrat"];
+function applyScannerTheme(t) {
+  try {
+    const old = document.getElementById("coa-theme"), oldLink = document.getElementById("coa-theme-font");
+    if (!t || typeof t !== "object") { if (old) old.remove(); if (oldLink) oldLink.remove(); return; }
+    const hex = (v, d) => (/^#[0-9a-fA-F]{6}$/.test(String(v || "")) ? String(v) : d);
+    const rgb = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)).join(",");
+    const A = hex(t.accent, "#0d6efd"), D = hex(t.dark, "#0b2e6b"), TB = hex(t.titleBg, "#ffffff"), TT = hex(t.titleText, "#000000"), TN = hex(t.tint, "#0f172a");
+    const TF = THEME_TITLE_FONTS.indexOf(t.titleFont) >= 0 ? t.titleFont : "Cinzel", XF = THEME_TEXT_FONTS.indexOf(t.textFont) >= 0 ? t.textFont : "Inter";
+    const fam = [TF, XF].filter((f, i, a) => a.indexOf(f) === i && f !== "Inter" && f !== "Montserrat" && f !== "Cinzel");
+    if (fam.length) {
+      let link = oldLink;
+      if (!link) { link = document.createElement("link"); link.id = "coa-theme-font"; link.rel = "stylesheet"; document.head.appendChild(link); }
+      link.href = "https://fonts.googleapis.com/css2?" + fam.map(f => "family=" + encodeURIComponent(f).replace(/%20/g, "+") + ":wght@400;600;700").join("&") + "&display=swap";
+    } else if (oldLink) oldLink.remove();
+    const css =
+      ".clock-panel{border-color:" + A + " !important;box-shadow:0 0 0 4px rgba(" + rgb(A) + ",.12),0 6px 18px rgba(" + rgb(A) + ",.25) !important}" +
+      ".clock-panel .digital-date{background:" + A + " !important}" +
+      ".clock-panel .digital-clock,.manual-modal h5,.manual-result-name,.manual-confirm-name{color:" + D + " !important}" +
+      ".manual-modal{border-top-color:" + A + " !important}.manual-result:hover,.manual-result:focus{border-color:" + A + " !important}" +
+      ".btn-primary{--bs-btn-bg:" + A + ";--bs-btn-border-color:" + A + ";--bs-btn-hover-bg:" + A + ";--bs-btn-hover-border-color:" + A + ";--bs-btn-active-bg:" + A + ";--bs-btn-active-border-color:" + A + ";--bs-btn-disabled-bg:" + A + ";--bs-btn-disabled-border-color:" + A + "}" +
+      "#event-title{background:" + TB + " !important;color:" + TT + " !important;font-family:'" + TF + "',serif !important}" +
+      "body::before{background:rgba(" + rgb(TN) + ",.65) !important}" +
+      "body,h2,h3,h4,.scanner-instruction,.digital-clock,.digital-date,.manual-modal h5,.manual-result-name,.manual-confirm-name{font-family:'" + XF + "',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}";
+    let st = old;
+    if (!st) { st = document.createElement("style"); st.id = "coa-theme"; document.head.appendChild(st); }
+    st.textContent = css;
+  } catch (err) { /* the normal look stays */ }
+}
