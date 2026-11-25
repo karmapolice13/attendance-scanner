@@ -744,7 +744,8 @@ function applyScannerTheme(t) {
     // the two logos beside the seminar title (office on the left, agency on the right); the banner above the clock is never changed
     [["logo-office", "logoOffice"], ["logo-agency", "logoAgency"]].forEach(function (p) {
       const el = document.getElementById(p[0]); if (!el) return;
-      const u = t && typeof t[p[1]] === "string" && /^https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]+&sz=w\d+$/.test(t[p[1]]) ? t[p[1]] : "";
+      const u = t && t.logoMode !== "off" && typeof t[p[1]] === "string" && /^https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]+&sz=w\d+$/.test(t[p[1]]) ? t[p[1]] : "";
+      el.classList.toggle("badge", !!t && t.logoMode !== "plain");
       el.onerror = function () { el.hidden = true; el.removeAttribute("src"); };
       if (u) { if (el.getAttribute("src") !== u) el.setAttribute("src", u); el.hidden = false; } else { el.hidden = true; el.removeAttribute("src"); }
     });
