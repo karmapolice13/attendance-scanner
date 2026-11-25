@@ -312,18 +312,3 @@ h2, h3, h4, .scanner-instruction {
 .status-done { border-left: 4px solid #198754; }
 .status-done .manual-result-meta { color: #198754; font-weight: 600; }
 .status-none { border-left: 4px solid #adb5bd; opacity: .8; }
-
-/* Logos at the left and right sides of the screen (office left, agency right); hidden until a logo is set */
-.title-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
-.title-row #event-title { margin: 0; }
-.title-row .side-logo { height: 70px; width: auto; max-width: 140px; object-fit: contain; }
-.title-row .side-logo[hidden] { display: none; }
-@media (min-width: 1100px) {
-  .title-row .side-logo { position: fixed; top: 50%; transform: translateY(-50%); height: auto; width: auto; max-width: min(15vw, 260px); max-height: 260px; z-index: 5; filter: drop-shadow(0 4px 10px rgba(0,0,0,.45)); }
-  .title-row #logo-office { left: 2.5vw; }
-  .title-row #logo-agency { right: 2.5vw; }
-}
-
-/* Logo style: a soft white badge (default) lets any logo sit well on the busy background; "plain" keeps it transparent */
-.title-row .side-logo.badge { background: rgba(255,255,255,.92); border-radius: 22px; padding: 12px; box-shadow: 0 6px 22px rgba(0,0,0,.35); filter: none; box-sizing: border-box; }
-@media (min-width: 1100px) { .title-row .side-logo.badge { max-width: min(14vw, 230px); } }
