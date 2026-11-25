@@ -741,14 +741,13 @@ const THEME_TEXT_FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Poppins", "Nu
 function applyScannerTheme(t) {
   try {
     const old = document.getElementById("coa-theme"), oldLink = document.getElementById("coa-theme-font");
-    const logoEl = document.querySelector(".header-logo");
-    if (logoEl && !logoEl.dataset.original) logoEl.dataset.original = logoEl.getAttribute("src");
-    const logoOk = t && typeof t.logo === "string" && /^https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]+&sz=w\d+$/.test(t.logo);
-    if (logoEl) {
-      const want = logoOk ? t.logo : logoEl.dataset.original;
-      logoEl.onerror = function () { if (logoEl.dataset.original && logoEl.getAttribute("src") !== logoEl.dataset.original) logoEl.setAttribute("src", logoEl.dataset.original); };   // a picture that cannot load: the original banner
-      if (logoEl.getAttribute("src") !== want) logoEl.setAttribute("src", want);
-    }   // only the picture changes: its size and place stay
+    // the two logos beside the seminar title (office on the left, agency on the right); the banner above the clock is never changed
+    [["logo-office", "logoOffice"], ["logo-agency", "logoAgency"]].forEach(function (p) {
+      const el = document.getElementById(p[0]); if (!el) return;
+      const u = t && typeof t[p[1]] === "string" && /^https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]+&sz=w\d+$/.test(t[p[1]]) ? t[p[1]] : "";
+      el.onerror = function () { el.hidden = true; el.removeAttribute("src"); };
+      if (u) { if (el.getAttribute("src") !== u) el.setAttribute("src", u); el.hidden = false; } else { el.hidden = true; el.removeAttribute("src"); }
+    });
     if (!t || typeof t !== "object") { if (old) old.remove(); if (oldLink) oldLink.remove(); return; }
     const hex = (v, d) => (/^#[0-9a-fA-F]{6}$/.test(String(v || "")) ? String(v) : d);
     const rgb = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)).join(",");
