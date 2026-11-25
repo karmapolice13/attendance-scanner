@@ -741,11 +741,23 @@ const THEME_TEXT_FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Poppins", "Nu
 function applyScannerTheme(t) {
   try {
     const old = document.getElementById("coa-theme"), oldLink = document.getElementById("coa-theme-font");
-    // the two logos beside the seminar title (office on the left, agency on the right); the banner above the clock is never changed
+    // the logos at the sides of the screen: one standard size for every logo, on a white badge or plain (the styles live here so they always travel with this file)
+    if (!document.getElementById("coa-logo-css")) {
+      const ls = document.createElement("style"); ls.id = "coa-logo-css";
+      ls.textContent =
+        ".title-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}.title-row #event-title{margin:0}" +
+        ".title-row .side-logo{width:96px;height:96px;object-fit:contain;box-sizing:border-box}.title-row .side-logo[hidden]{display:none !important}" +
+        ".title-row .side-logo.badge{background:rgba(255,255,255,.95);border-radius:22px;padding:10px;box-shadow:0 6px 22px rgba(0,0,0,.35)}" +
+        ".title-row .side-logo.plain{filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}" +
+        "@media (min-width:1100px){.title-row .side-logo{position:fixed;top:50%;transform:translateY(-50%);width:clamp(140px,13vw,210px);height:clamp(140px,13vw,210px);z-index:5}" +
+        ".title-row #logo-office{left:2.5vw}.title-row #logo-agency{right:2.5vw}}";
+      document.head.appendChild(ls);
+    }
     [["logo-office", "logoOffice"], ["logo-agency", "logoAgency"]].forEach(function (p) {
       const el = document.getElementById(p[0]); if (!el) return;
       const u = t && t.logoMode !== "off" && typeof t[p[1]] === "string" && /^https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]+&sz=w\d+$/.test(t[p[1]]) ? t[p[1]] : "";
       el.classList.toggle("badge", !!t && t.logoMode !== "plain");
+      el.classList.toggle("plain", !!t && t.logoMode === "plain");
       el.onerror = function () { el.hidden = true; el.removeAttribute("src"); };
       if (u) { if (el.getAttribute("src") !== u) el.setAttribute("src", u); el.hidden = false; } else { el.hidden = true; el.removeAttribute("src"); }
     });
