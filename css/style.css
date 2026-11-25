@@ -323,3 +323,7 @@ h2, h3, h4, .scanner-instruction {
   .title-row #logo-office { left: 2.5vw; }
   .title-row #logo-agency { right: 2.5vw; }
 }
+
+/* Logo style: a soft white badge (default) lets any logo sit well on the busy background; "plain" keeps it transparent */
+.title-row .side-logo.badge { background: rgba(255,255,255,.92); border-radius: 22px; padding: 12px; box-shadow: 0 6px 22px rgba(0,0,0,.35); filter: none; box-sizing: border-box; }
+@media (min-width: 1100px) { .title-row .side-logo.badge { max-width: min(14vw, 230px); } }
