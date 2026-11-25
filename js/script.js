@@ -741,6 +741,14 @@ const THEME_TEXT_FONTS = ["Inter", "Roboto", "Open Sans", "Lato", "Poppins", "Nu
 function applyScannerTheme(t) {
   try {
     const old = document.getElementById("coa-theme"), oldLink = document.getElementById("coa-theme-font");
+    const logoEl = document.querySelector(".header-logo");
+    if (logoEl && !logoEl.dataset.original) logoEl.dataset.original = logoEl.getAttribute("src");
+    const logoOk = t && typeof t.logo === "string" && /^https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]+&sz=w\d+$/.test(t.logo);
+    if (logoEl) {
+      const want = logoOk ? t.logo : logoEl.dataset.original;
+      logoEl.onerror = function () { if (logoEl.dataset.original && logoEl.getAttribute("src") !== logoEl.dataset.original) logoEl.setAttribute("src", logoEl.dataset.original); };   // a picture that cannot load: the original banner
+      if (logoEl.getAttribute("src") !== want) logoEl.setAttribute("src", want);
+    }   // only the picture changes: its size and place stay
     if (!t || typeof t !== "object") { if (old) old.remove(); if (oldLink) oldLink.remove(); return; }
     const hex = (v, d) => (/^#[0-9a-fA-F]{6}$/.test(String(v || "")) ? String(v) : d);
     const rgb = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)).join(",");
