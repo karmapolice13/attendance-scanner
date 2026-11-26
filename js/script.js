@@ -753,6 +753,44 @@ function applyScannerTheme(t) {
         ".title-row #logo-office{left:2.5vw}.title-row #logo-agency{right:2.5vw}}";
       document.head.appendChild(ls);
     }
+    // the background picture chosen in the console (a file in assets/background); none chosen = the original picture
+    (function () {
+      let bs = document.getElementById("coa-bg-css");
+      const f = t && typeof t.background === "string" && /^[\w][\w .()-]{0,80}\.(png|jpe?g|webp)$/i.test(t.background) ? t.background : "";
+      if (!f) { if (bs) bs.remove(); return; }
+      if (!bs) { bs = document.createElement("style"); bs.id = "coa-bg-css"; document.head.appendChild(bs); }
+      bs.textContent = "body{background-image:url('" + new URL("assets/background/" + encodeURIComponent(f), document.baseURI).href + "') !important}";
+    })();
+    // night mode: a dark look for dim venues. The console sets off / on / automatic; the moon button on a device overrides it for that device.
+    (function () {
+      if (!document.getElementById("coa-night-css")) {
+        const ns = document.createElement("style"); ns.id = "coa-night-css";
+        ns.textContent =
+          "body.coa-night::before{background:rgba(2,6,23,.9) !important}" +
+          "body.coa-night #event-title{background:#111827 !important;color:#e5e7eb !important}" +
+          "body.coa-night .scanner-card,body.coa-night .card{background-color:rgba(17,24,39,.96) !important;color:#e5e7eb !important}" +
+          "body.coa-night h2,body.coa-night h3,body.coa-night h4,body.coa-night .scanner-instruction,body.coa-night label,body.coa-night .text-muted{color:#cbd5e1 !important}" +
+          "body.coa-night .clock-panel{background:#0f172a !important}body.coa-night .clock-panel .digital-clock{color:#93c5fd !important}" +
+          "body.coa-night .manual-modal{background:#111827 !important;color:#e5e7eb !important}body.coa-night .manual-modal h5,body.coa-night .manual-result-name,body.coa-night .manual-confirm-name{color:#e5e7eb !important}" +
+          "body.coa-night .manual-modal input,body.coa-night .manual-modal select{background:#0b1220 !important;color:#e5e7eb !important;border-color:#374151 !important}" +
+          "body.coa-night .manual-result{background:#1f2937 !important;color:#e5e7eb !important;border-color:#374151 !important}body.coa-night .manual-result-meta,body.coa-night .manual-hint{color:#94a3b8 !important}" +
+          "body.coa-night .manual-footer{color:#cbd5e1 !important}body.coa-night .header-logo,body.coa-night .side-logo{filter:brightness(.8)}" +
+          "#coa-night-btn{position:fixed;left:12px;bottom:12px;z-index:20;width:42px;height:42px;border-radius:50%;border:0;background:rgba(15,23,42,.8);color:#fff;font-size:20px;line-height:42px;padding:0;box-shadow:0 4px 12px rgba(0,0,0,.4);cursor:pointer}";
+        document.head.appendChild(ns);
+      }
+      const today = new Date().toDateString();
+      let dev = ""; try { const v = String(localStorage.getItem("coaNight") || "").split("|"); dev = v[1] === today ? v[0] : ""; } catch (e) { dev = ""; }   // the moon button counts for today only
+      const mode = t && (t.night === "on" || t.night === "auto") ? t.night : "off", h = new Date().getHours();
+      const night = dev === "on" ? true : dev === "off" ? false : (mode === "on" || (mode === "auto" && (h >= 18 || h < 6)));
+      document.body.classList.toggle("coa-night", night);
+      let b = document.getElementById("coa-night-btn");
+      if (!b) {
+        b = document.createElement("button"); b.id = "coa-night-btn"; b.type = "button";
+        b.onclick = function () { const on = !document.body.classList.contains("coa-night"); try { localStorage.setItem("coaNight", (on ? "on" : "off") + "|" + new Date().toDateString()); } catch (e) { /* not saved */ } document.body.classList.toggle("coa-night", on); b.textContent = on ? "\u2600" : "\u263E"; b.title = on ? "Back to the day look" : "Night mode"; };
+        document.body.appendChild(b);
+      }
+      b.textContent = night ? "\u2600" : "\u263E"; b.title = night ? "Back to the day look" : "Night mode";
+    })();
     [["logo-office", "logoOffice"], ["logo-agency", "logoAgency"]].forEach(function (p) {
       const el = document.getElementById(p[0]); if (!el) return;
       const u = t && t.logoMode !== "off" && typeof t[p[1]] === "string" && /^https:\/\/drive\.google\.com\/thumbnail\?id=[\w-]+&sz=w\d+$/.test(t[p[1]]) ? t[p[1]] : "";
